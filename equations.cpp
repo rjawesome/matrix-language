@@ -1,73 +1,7 @@
 #include <bits/stdc++.h>
+#include "utils.h"
 
 using namespace std;
-
-const string DASH = "-------------";
-const char VAR_NAMES[] = {'x','y','z','w','a','b','c'};
-const int VAR_NAME_COUNT = sizeof(VAR_NAMES)/sizeof(VAR_NAMES[0]);
-
-void rref(vector<vector<double>>& matrix, int rows, int cols) {
-    // ref
-    for (int i = 0; i < min(rows, cols); i++) {
-        if (matrix[i][i] == 0) {
-            // see if we need to do a swap
-            for (int j = i + 1; j < rows; j++) {
-                if (matrix[j][i] != 0) {
-                    // swap
-                    for (int k = 0; k < cols; k++) {
-                        double temp = matrix[i][k];
-                        matrix[i][k] = matrix[j][k];
-                        matrix[j][k] = temp;
-                    }
-                    break;
-                }
-            }
-        }
-        for (int j = i + 1; j < rows; j++) {
-            if (matrix[j][i] != 0) {
-                double mul = -(matrix[j][i]/matrix[i][i]);
-                for (int k = 0; k < cols; k++) {
-                    matrix[j][k] += matrix[i][k] * mul;
-                }
-            }
-        }
-    }
-
-    // reverse ref
-    for (int i = min(rows,cols)-1; i >= 0; i--) {
-        if (matrix[i][i] == 0) {
-            // see if we need to do a swap
-            for (int j = i - 1; j >= 0; j--) {
-                if (matrix[j][i] != 0) {
-                    // swap
-                    for (int k = 0; k < cols; k++) {
-                        double temp = matrix[i][k];
-                        matrix[i][k] = matrix[j][k];
-                        matrix[j][k] = temp;
-                    }
-                    break;
-                }
-            }
-        }
-
-        // normalize this row (if necessary)
-        if (matrix[i][i] != 0) {
-            double div = matrix[i][i];
-            for (int k = 0; k < cols; k++) {
-                matrix[i][k] /= div;
-            }
-        }
-
-        for (int j = i - 1; j >= 0; j--) {
-            if (matrix[j][i] != 0) {
-                double mul = -(matrix[j][i]/matrix[i][i]);
-                for (int k = 0; k < cols; k++) {
-                    matrix[j][k] += matrix[i][k] * mul;
-                }
-            }
-        }
-    }
-}
 
 void no_solutions() {
     cout << "No solutions!" << endl;
@@ -75,13 +9,9 @@ void no_solutions() {
 
 void one_solution(vector<vector<double>>& matrix, int variables) {
     cout << "One solution!" << endl;
-    cout << DASH << endl;
-    for (int i = 0; i < variables; i++) {
-        // vector the end of the matrix
-        cout << matrix[i][variables] << " ";
-    }
-    cout << endl;
-    cout << DASH << endl;
+    vector<double> solution(variables);
+    for (int i = 0; i < variables; i++) solution[i] = matrix[i][variables];
+    print_vector(solution, "");
 }
 
 void multiple_solutions(vector<vector<double>>& matrix, int variables, int rows) {
@@ -112,35 +42,11 @@ void multiple_solutions(vector<vector<double>>& matrix, int variables, int rows)
     cout << "Multiple solutions!" << endl;
     int cnt = 0;
     for (auto [_, solution] : solutions) {
-        cout << DASH << endl;
-        cout << VAR_NAMES[cnt%VAR_NAME_COUNT];
-        if (cnt>=VAR_NAME_COUNT) cout << cnt/VAR_NAME_COUNT;
-        cout << endl;
-
-        for (double i : solution) {
-            // vector the end of the matrix
-            cout << i << " ";
-        }
-        cout << endl;
-        cout << DASH << endl;
+        string variable = VAR_NAMES[cnt%VAR_NAME_COUNT] + to_string((int)(cnt/VAR_NAME_COUNT));
+        print_vector(solution, variable);
         cnt++;
     }
-    cout << "Offset" << endl;
-    for (double i : offset) {
-        // vector the end of the matrix
-        cout << i << " ";
-    }
-    cout << endl;
-    cout << DASH << endl;
-}
-
-void print_matrix(vector<vector<double>>& matrix, int rows, int cols) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            cout << matrix[i][j] << " ";
-        }
-        cout << endl;
-    }
+    print_vector(offset, "Offset");
 }
 
 int main () {
@@ -185,8 +91,5 @@ int main () {
         multiple_solutions(matrix, cols - 1, rows);
     }
 
-    print_matrix(matrix, rows, cols);
+    // print_matrix(matrix, rows, cols);
 }
-
-// what if the first row has all 0s, AND the first column has all zeros (that variable not used) => then a useless row would stay on top
-// is that fine?
