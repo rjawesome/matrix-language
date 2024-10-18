@@ -7,36 +7,36 @@ void no_solutions() {
     cout << "No solutions!" << endl;
 }
 
-void one_solution(vector<vector<double>>& matrix, int variables) {
+void one_solution(vector<vector<Fraction>>& matrix, int variables) {
     cout << "One solution!" << endl;
-    vector<double> solution(variables);
+    vector<Fraction> solution(variables);
     for (int i = 0; i < variables; i++) solution[i] = matrix[i][variables];
     print_vector(solution, "");
 }
 
-void multiple_solutions(vector<vector<double>>& matrix, int variables, int rows) {
+void multiple_solutions(vector<vector<Fraction>>& matrix, int variables, int rows) {
     // free var col # => vector
-    map<int, vector<double>> solutions;
-    vector<double> offset(variables);
+    map<int, vector<Fraction>> solutions;
+    vector<Fraction> offset(variables);
     for (int i = 0; i < variables; i++) {
-        if (i >= rows || matrix[i][i] == 0) {
-            vector<double> solution(variables);
-            solution[i] = 1; // each free variable contains itself
+        if (i >= rows || matrix[i][i].numerator == 0) {
+            vector<Fraction> solution(variables);
+            solution[i] = {1, 1}; // each free variable contains itself
             solutions[i] = solution;
         }
     }
     for (int i = 0; i < rows; i++) {
         // find the determined variable
-        if (matrix[i][i] == 0) continue;
+        if (matrix[i][i].numerator == 0) continue;
         // update each free var sol if needed
         for (int j = 0; j < variables; j++) {
-            if (matrix[i][j] != 0 && solutions.find(j) != solutions.end()) {
-                solutions[j][i] = -matrix[i][j]/matrix[i][i];
+            if (matrix[i][j].numerator != 0 && solutions.find(j) != solutions.end()) {
+                solutions[j][i] = negate_frac(mul_frac(matrix[i][j], inverse_frac(matrix[i][i])));
             }
         }
 
         // update the offset (end of equation / coefficient)
-        offset[i] = matrix[i][variables]/matrix[i][i];
+        offset[i] = mul_frac(matrix[i][variables], inverse_frac(matrix[i][i]));
     }
 
     cout << "Multiple solutions!" << endl;
@@ -51,7 +51,7 @@ void multiple_solutions(vector<vector<double>>& matrix, int variables, int rows)
 
 int main () {
     int rows, cols; cin >> rows >> cols;
-    vector<vector<double>> matrix(rows, vector<double>(cols));
+    vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             cin >> matrix[i][j];
@@ -64,13 +64,13 @@ int main () {
     for (int i = 0; i < rows; i++) {
         bool iseq = false;
         for (int j = 0; j < cols - 1; j++) {
-            if (matrix[i][j] != 0) {
+            if (matrix[i][j].numerator != 0) {
                 iseq = true;
                 break;
             }
         }
         if (iseq) equations++;
-        else if (matrix[i][cols-1] != 0) {
+        else if (matrix[i][cols-1].numerator != 0) {
             // invalid equation
             no_solutions();
             return 0;
