@@ -1,7 +1,4 @@
-#include <bits/stdc++.h>
-#include "utils.h"
-
-using namespace std;
+#include "main.h"
 
 void no_solutions() {
     cout << "No solutions!" << endl;

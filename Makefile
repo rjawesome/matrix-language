@@ -1,14 +1,14 @@
 # Default rule to build the program
-all: equations
+all: main
 
 # Rule to build the target executable
-equations:
-	g++ equations.cpp utils.cpp -o equations.out
+main:
+	g++ main.cpp matrix.cpp vector.cpp fraction.cpp utils.cpp -o main.out
 
 # Rule to clean up build files
 clean:
-	rm -f equations.out
+	rm -f main.out
 
 # Rule to build and run the program directly
-run: equations
-	./equations.out
+run: main
+	./main.out
