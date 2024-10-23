@@ -3,7 +3,7 @@ all: main
 
 # Rule to build the target executable
 main:
-	g++ main.cpp matrix.cpp vector.cpp fraction.cpp utils.cpp -o main.out
+	g++ -Iinc src/*.cpp -o main.out
 
 # Rule to clean up build files
 clean:
