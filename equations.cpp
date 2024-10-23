@@ -14,7 +14,8 @@ void one_solution(vector<vector<Fraction>>& matrix, int variables) {
     print_vector(solution, "");
 }
 
-void multiple_solutions(vector<vector<Fraction>>& matrix, int variables, int rows) {
+void multiple_solutions(vector<vector<Fraction>>& matrix, int variables) {
+    int rows = matrix.size();
     // free var col # => vector
     map<int, vector<Fraction>> solutions;
     vector<Fraction> offset(variables);
@@ -49,7 +50,7 @@ void multiple_solutions(vector<vector<Fraction>>& matrix, int variables, int row
     print_vector(offset, "Offset");
 }
 
-int main () {
+int main2 () {
     int rows, cols; cin >> rows >> cols;
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
     for (int i = 0; i < rows; i++) {
@@ -58,7 +59,7 @@ int main () {
         }
     }
 
-    rref(matrix, rows, cols);
+    rref(matrix);
 
     int equations = 0;
     for (int i = 0; i < rows; i++) {
@@ -88,8 +89,24 @@ int main () {
     }
     // undersolved (free variables)
     else {
-        multiple_solutions(matrix, cols - 1, rows);
+        multiple_solutions(matrix, cols - 1);
     }
 
-    // print_matrix(matrix, rows, cols);
+    // print_matrix(matrix);
+    return 0;
+}
+
+int main () {
+    int rows, cols; cin >> rows >> cols;
+    vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            cin >> matrix[i][j];
+        }
+    }
+
+    matrix = orthonormalize_rows(matrix);
+
+    print_matrix(matrix);
+    return 0;
 }
