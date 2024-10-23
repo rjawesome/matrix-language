@@ -12,6 +12,6 @@ vector<Fraction> add_vectors(vector<Fraction> const &a, vector<Fraction> const &
 vector<Fraction> sub_vectors(vector<Fraction> const &a, vector<Fraction> const &b);
 vector<Fraction> mul_vector(Fraction a, vector<Fraction> const &b);
 
-void print_vector(vector<Fraction> const &vector, string prefix);
+void print_vector(vector<Fraction> const &vector);
 
 #endif
