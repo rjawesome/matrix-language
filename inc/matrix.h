@@ -8,9 +8,11 @@
 #include "assert.h"
 using namespace std;
 
+vector<vector<Fraction>> get_matrix();
 void print_matrix(vector<vector<Fraction>> const &matrix);
 vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix);
 vector<vector<Fraction>> orthonormalize_rows(vector<vector<Fraction>> const &matrix);
+vector<vector<Fraction>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2);
 void rref(vector<vector<Fraction>> &matrix);
 
 #endif

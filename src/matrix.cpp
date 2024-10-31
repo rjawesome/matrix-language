@@ -91,6 +91,33 @@ vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix) {
     return t;
 }
 
+vector<vector<Fraction>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
+    assert(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size());
+    vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
+    for (int i = 0; i < matrix1.size(); i++) {
+        for (int j = 0; j < matrix2[0].size(); j++) {
+            Fraction sum;
+            for (int k = 0; k < matrix2.size(); k++) {
+                sum = add_frac(sum, mul_frac(matrix1[i][k], matrix2[k][j]));
+            }
+            output[i][j] = sum;
+        }
+    }
+    return output;
+}
+
+vector<vector<Fraction>> get_matrix() {
+    int rows, cols; cin >> rows >> cols;
+    assert(rows > 0 && cols > 0);
+    vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            cin >> matrix[i][j];
+        }
+    }
+    return matrix;
+}
+
 void print_matrix(vector<vector<Fraction>> const &matrix) {
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[i].size(); j++) {

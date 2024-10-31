@@ -3,20 +3,24 @@
 int main () {
     string o; cin >> o;
     if (o.compare("gram") == 0) {
-        int rows, cols; cin >> rows >> cols;
-        vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                cin >> matrix[i][j];
-            }
-        }
-
-        matrix = orthonormalize_rows(matrix);
-
+        vector<vector<Fraction>> matrix = get_matrix();
+        matrix = transpose(orthonormalize_rows(transpose(matrix)));
         print_matrix(matrix);
         return 0;
     } else if (o.compare("eq") == 0) {
-        return solve_equations();
+        vector<vector<Fraction>> matrix = get_matrix();
+        solve_equations(matrix);
+        return 0;
+    } else if (o.compare("qr") == 0) {
+        vector<vector<Fraction>> matrix = get_matrix();
+        vector<vector<Fraction>> qT = orthonormalize_rows(transpose(matrix));
+        vector<vector<Fraction>> Q = transpose(qT);
+        vector<vector<Fraction>> R = mat_mul(qT, matrix);
+        cout << "Q" << endl;
+        print_matrix(Q);
+        cout << "R" << endl;
+        print_matrix(R);
+        return 0;
     }
     cout << "Invalid operation" << endl;
     return 1;

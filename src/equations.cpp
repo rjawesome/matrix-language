@@ -49,14 +49,9 @@ void multiple_solutions(vector<vector<Fraction>>& matrix, int variables) {
     print_vector(offset);
 }
 
-int solve_equations () {
-    int rows, cols; cin >> rows >> cols;
-    vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            cin >> matrix[i][j];
-        }
-    }
+void solve_equations (vector<vector<Fraction>>& matrix) {
+    int rows = matrix.size();
+    int cols = matrix[0].size();
 
     rref(matrix);
 
@@ -73,7 +68,7 @@ int solve_equations () {
         else if (matrix[i][cols-1].numerator != 0) {
             // invalid equation
             no_solutions();
-            return 0;
+            return;
         }
     }
 
@@ -91,6 +86,5 @@ int solve_equations () {
         multiple_solutions(matrix, cols - 1);
     }
 
-    // print_matrix(matrix);
-    return 0;
+    return;
 }

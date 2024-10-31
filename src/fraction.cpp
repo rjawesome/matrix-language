@@ -12,7 +12,9 @@ Fraction mul_frac(Fraction a, Fraction b) {
 Fraction add_frac(Fraction a, Fraction b) {
     assert(a.sqrt == b.sqrt || a.numerator == 0 || b.numerator == 0);
     int common_denom = a.denominator * b.denominator / gcd(a.denominator, b.denominator);
-    return { a.numerator * (common_denom/a.denominator) + b.numerator * (common_denom/b.denominator), common_denom, a.numerator == 0 ? b.sqrt : a.sqrt };
+    int new_num = a.numerator * (common_denom/a.denominator) + b.numerator * (common_denom/b.denominator);
+    int div = gcd(new_num, common_denom);
+    return {new_num / div, common_denom / div, a.numerator == 0 ? b.sqrt : a.sqrt };
 }
 
 Fraction negate_frac(Fraction a) {
@@ -39,11 +41,13 @@ Fraction sqrt_frac(Fraction a) {
 }
 
 ostream &operator<<(ostream &os, Fraction const &m) {
-    os << m.numerator;
-    if (m.sqrt != 1) {
+    if (m.sqrt == 1 || m.numerator != 1) {
+        os << m.numerator;
+    }
+    if (m.sqrt != 1 && m.numerator != 0) {
         os << "√" << m.sqrt;
     }
-    if (m.denominator != 1) {
+    if (m.denominator != 1 && m.numerator != 0) {
         os << "/" << m.denominator;
     }
     return os;
