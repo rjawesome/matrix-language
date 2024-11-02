@@ -5,6 +5,8 @@
         "ranges": "cpp",
         "iosfwd": "cpp",
         "cmath": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "string_view": "cpp",
+        "regex": "cpp"
     }
 }
