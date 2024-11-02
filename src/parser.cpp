@@ -1,111 +1,102 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Thing {
-    string type;
+struct Expression {
     string name;
-    vector<Thing> children;
+    vector<Expression> children;
 };
 
-set<char> special_tokens{')', '(', ',', '+', '*'};
-set<string> infix_tokens{"+", "*"};
+set<char> special_tokens{')', '(', ',', '+', '*', '^'};
+set<string> infix_tokens{"+", "*", "^"};
 
 map<string, int> priority = {
     {"+", 0},
     {"*", 1},
+    {"^", 2}
 };
 
-pair<int, Thing> parse(int start, vector<string> const &tokens, bool infix) {
-    if (start >= tokens.size()) assert(false);
+Expression parse(queue<string> &tokens, bool infix) {
+    if (tokens.empty()) assert(false);
 
-    Thing parentThing;
+    Expression cur_expression;
+    string cur_token = tokens.front(); tokens.pop();
 
-    if (tokens[start] == ")") assert(false);
+    if (cur_token == ")") assert(false);
 
-    if (tokens[start] == "(") {
-        auto [s, t] = parse(start + 1, tokens, true);
-        parentThing = t;
-        start = s;
-        assert(start < tokens.size() && tokens[start] == ")");
+    if (cur_token == "(") {
+        cur_expression = parse(tokens, true);
+        assert(!tokens.empty() && tokens.front() == ")");
+        tokens.pop();
     } else {
-        parentThing = {"value", tokens[start]};
+        cur_expression = {cur_token};
     }
 
-    if (start + 1 >= tokens.size()) {
-        return {start + 1, parentThing};
+    if (tokens.empty()) {
+        return cur_expression;
     }
 
-    // looking ahead
-    start += 1;
-
-    if (infix && start < tokens.size() && infix_tokens.find(tokens[start]) != infix_tokens.end()) {
+    if (infix && infix_tokens.find(tokens.front()) != infix_tokens.end()) {
         stack<string> operators;
-        stack<Thing> results;
-        results.push(parentThing);
-        while (start < tokens.size() && infix_tokens.find(tokens[start]) != infix_tokens.end()) {
-            auto [newstart, nextexpr] = parse(start + 1, tokens, false);
-            while (operators.size() > 0 && priority[operators.top()] > priority[tokens[start]]) {
+        stack<Expression> results;
+        results.push(cur_expression);
+        while (!tokens.empty() && infix_tokens.find(tokens.front()) != infix_tokens.end()) {
+            string cur_operator = tokens.front(); tokens.pop();
+            Expression next_expression = parse(tokens, false);
+            while (operators.size() > 0 && priority[operators.top()] >= priority[cur_operator]) {
                 assert(results.size() >= 2);
                 string op = operators.top(); operators.pop();
-                Thing infixThing{"function", op};
-                Thing rhs = results.top(); results.pop();
-                Thing lhs = results.top(); results.pop();
-                infixThing.children.push_back(lhs);
-                infixThing.children.push_back(rhs);
-                results.push(infixThing);
+                Expression rhs = results.top(); results.pop();
+                Expression lhs = results.top(); results.pop();
+                results.push({"function", {{op}, lhs, rhs}});
             }
             
-            results.push(nextexpr);
-            operators.push(tokens[start]);
-            start = newstart;
+            results.push(next_expression);
+            operators.push(cur_operator);
         }
         while (operators.size() > 0) {
             assert(results.size() >= 2);
             string op = operators.top(); operators.pop();
-            Thing infixThing{"function", op};
-            Thing rhs = results.top(); results.pop();
-            Thing lhs = results.top(); results.pop();
-            infixThing.children.push_back(lhs);
-            infixThing.children.push_back(rhs);
-            results.push(infixThing);
+            Expression rhs = results.top(); results.pop();
+            Expression lhs = results.top(); results.pop();
+            results.push({"function", {{op}, lhs, rhs}});
         }
 
         assert(results.size() == 1);
-        parentThing = results.top();
+        cur_expression = results.top();
     }
-    // no support for first class functions
-    else if (tokens[start] == "(") {
-        parentThing.type = "function";
-        start += 1;
-        while (start < tokens.size() && tokens[start] != ")") {
-            auto [s, t] = parse(start, tokens, true);
-            parentThing.children.push_back(t);
-            assert(s < tokens.size());
 
-            if (tokens[s] == ",") {
-                start = s + 1;
-            } else if (tokens[s] == ")") {
-                start = s;
-            } else {
+    // chcek if calling is happening
+    while (!tokens.empty() && tokens.front() == "(") {
+        cur_expression = {"function", {cur_expression}};
+        tokens.pop();
+        while (!tokens.empty() && tokens.front() != ")") {
+            Expression child_expression = parse(tokens, true);
+            cur_expression.children.push_back(child_expression);
+
+            if (tokens.front() == ",") {
+                tokens.pop();
+            } else if (tokens.front() != ")") {
                 assert(false);
             }
         }
+        assert(!tokens.empty());
+        tokens.pop();
     }
 
-    return { start, parentThing };
+    return cur_expression;
 }
 
-vector<string> tokenize(string line) {
+queue<string> tokenize(string line) {
     string token = "";
-    vector<string> tokens;
+    queue<string> tokens;
     for (int i = 0; i < line.length(); i++) {
         if (line[i] == ' ') {
             continue;
         }
 
         if (special_tokens.find(line[i]) != special_tokens.end()) {
-            if (token.size() != 0) tokens.push_back(token);
-            tokens.push_back(string() + line[i]);
+            if (token.size() != 0) tokens.push(token);
+            tokens.push(string() + line[i]);
             token = "";
         }
         else {
@@ -113,17 +104,17 @@ vector<string> tokenize(string line) {
         }
     }
     if (token.size() != 0) {
-        tokens.push_back(token);
+        tokens.push(token);
     }
 
     return tokens;
 }
 
-void print_thing(Thing thing) {
-    cout << "value: " << thing.name << " type: " << thing.type << endl;;
-    for (int i = 0; i < thing.children.size(); i++) {
+void print_expression(Expression expression) {
+    cout << "value: " << expression.name << endl;;
+    for (int i = 0; i < expression.children.size(); i++) {
         cout << "child #" << i << endl;
-        print_thing(thing.children[i]);
+        print_expression(expression.children[i]);
         cout << "-----" << endl;
     }
 }
@@ -131,6 +122,7 @@ void print_thing(Thing thing) {
 int main() {
     string line;
     getline(cin, line);
-    auto [_, thing] = parse(0, tokenize(line), true);
-    print_thing(thing);
+    queue<string> tokens = tokenize(line);
+    Expression expression = parse(tokens, true);
+    print_expression(expression);
 }
