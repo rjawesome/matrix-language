@@ -114,7 +114,8 @@ vector<vector<Fraction>> get_matrix() {
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            cin >> matrix[i][j];
+            string s; cin >> s;
+            load_frac(s, matrix[i][j]);
         }
     }
     return matrix;
@@ -123,7 +124,8 @@ vector<vector<Fraction>> get_matrix() {
 void print_matrix(vector<vector<Fraction>> const &matrix) {
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[i].size(); j++) {
-            cout << matrix[i][j] << " ";
+            print_frac(matrix[i][j]);
+            cout << " ";
         }
         cout << endl;
     }

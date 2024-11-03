@@ -40,21 +40,19 @@ Fraction sqrt_frac(Fraction a) {
     return mul_frac({1, 1, a.numerator}, inverse_frac({1, 1, a.denominator}));
 }
 
-ostream &operator<<(ostream &os, Fraction const &m) {
+void print_frac(Fraction const &m) {
     if (m.sqrt == 1 || m.numerator != 1) {
-        os << m.numerator;
+        cout << m.numerator;
     }
     if (m.sqrt != 1 && m.numerator != 0) {
-        os << "√" << m.sqrt;
+        cout << "√" << m.sqrt;
     }
     if (m.denominator != 1 && m.numerator != 0) {
-        os << "/" << m.denominator;
+        cout << "/" << m.denominator;
     }
-    return os;
 }
 
-istream &operator>>(istream &is, Fraction &m) {
-    string s; is >> s;
+void load_frac(string s, Fraction &m) {
     if (s.find("/") == string::npos) {
         m.denominator = 1;
         m.numerator = stoi(s);
@@ -65,5 +63,5 @@ istream &operator>>(istream &is, Fraction &m) {
     int div = gcd(m.numerator, m.denominator);
     m.numerator /= div;
     m.denominator /= div;
-    return is;
+    m.sqrt = 1;
 }

@@ -9,6 +9,7 @@
         "string_view": "cpp",
         "regex": "cpp",
         "deque": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "new": "cpp"
     }
 }

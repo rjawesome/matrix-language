@@ -45,7 +45,7 @@ Fraction dot(vector<Fraction> const &vector1, vector<Fraction> const &vector2) {
 void print_vector(vector<Fraction> const &vector) {
     cout << DASH << endl;
     for (Fraction i : vector) {
-        cout << i << " ";
+        print_frac(i);
     }
     cout << endl;
     cout << DASH << endl;

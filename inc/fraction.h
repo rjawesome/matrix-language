@@ -7,13 +7,13 @@
 using namespace std;
 
 struct Fraction {
-    int numerator = 0;
-    int denominator = 1; // should always be >= 1
-    int sqrt = 1; // multiples to numerator
+    int numerator;
+    int denominator; // should always be >= 1
+    int sqrt; // multiples to numerator
 };
 
-ostream &operator<<(ostream &os, Fraction const &m);
-istream &operator>>(istream &is, Fraction &m);
+void print_frac(Fraction const &m);
+void load_frac(string s, Fraction &m);
 Fraction mul_frac(Fraction a, Fraction b);
 Fraction add_frac(Fraction a, Fraction b);
 Fraction negate_frac(Fraction a);

@@ -4,18 +4,6 @@ struct Expression {
     vector<Expression> children;
 };
 
-enum DataType {
-    TYPE_FRACTION,
-    TYPE_VECTOR,
-    TYPE_MATRIX,
-    TYPE_FUNCTION
-};
-
-struct DataContainer {
-    DataType type;
-    shared_ptr<void> data;
-};
-
 struct Function {
     vector<DataType> args;
     DataType returnType;
@@ -111,13 +99,30 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFr
             assert(e.children[0].children.size() == 0);
             assert(e.children[0].name.length() > 0 && banned.find(e.children[0].name[0]) == banned.end());
             string name = e.children[0].name;
+
+            if (globalFrame.find(name) != globalFrame.end()) {
+                if (globalFrame[name].type == TYPE_MATRIX || globalFrame[name].type == TYPE_VECTOR) {
+                    delete globalFrame[name].ptr;
+                }
+            }
+
             DataContainer value = evaluate(e.children[0], globalFrame);
+            if (!value.anon && (value.type == TYPE_MATRIX || value.type == TYPE_VECTOR)) {
+                if (value.type == TYPE_VECTOR) {
+                    value.ptr = new vector<Fraction>(*(vector<Fraction>*)value.ptr);
+                } 
+                if (value.type == TYPE_MATRIX) {
+                    value.ptr = new vector<vector<Fraction>>(*(vector<vector<Fraction>>*)value.ptr);
+                }
+            } else {
+                value.anon = false;
+            }
             globalFrame[name] = value;
             return value;
         } else {
             DataContainer funcData = evaluate(e.children[0], globalFrame);
             assert(funcData.type == TYPE_FUNCTION);
-            Function f = *static_pointer_cast<Function>(funcData.data);
+            Function f = *(Function*)(funcData.ptr);
             assert(f.args.size() == e.children.size() - 1);
             vector<DataContainer> args;
             for (int i = 0; i < f.args.size(); i++) {
@@ -125,7 +130,13 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFr
                 assert(arg.type == f.args[i]);
                 args.push_back(arg);
             }
-            return f.func(args);
+            DataContainer ret = f.func(args);
+            for (DataContainer arg : args) {
+                if (arg.anon && (arg.type == TYPE_MATRIX || arg.type == TYPE_VECTOR)) {
+                    delete arg.ptr;
+                }
+            }
+            return ret;
        }
     } else {
         assert(globalFrame.find(e.name) != globalFrame.end());
