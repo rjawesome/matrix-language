@@ -4,12 +4,6 @@ struct Expression {
     vector<Expression> children;
 };
 
-struct Function {
-    vector<DataType> args;
-    DataType returnType;
-    DataContainer (*func)(vector<DataContainer>);
-};
-
 set<char> special_tokens{')', '(', ',', '+', '*', '^'};
 set<char> banned{'1','2','3','4','5','6','7','8','9','0','/','-'};
 set<string> infix_tokens{"+", "*", "^"};
@@ -19,6 +13,15 @@ map<string, int> priority = {
     {"+", 1},
     {"*", 2},
     {"^", 3}
+};
+
+DataContainer get_matrix_adjusted(DataContainer args[]) {
+    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(get_matrix()));
+    return {TYPE_MATRIX, false, .ptr = matrix};
+}
+
+map<string, DataContainer> base_global_frame = {
+    {"get_matrix", {TYPE_FUNCTION, false, .function = {0, {}, TYPE_MATRIX, get_matrix_adjusted} }},
 };
 
 Expression parse(queue<string> &tokens, bool infix) {
@@ -92,7 +95,7 @@ Expression parse(queue<string> &tokens, bool infix) {
     return cur_expression;
 }
 
-DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFrame) {
+DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
     if (e.children.size() > 0) {
        if (e.name == "=") {
             assert(e.children.size() == 2);
@@ -100,13 +103,13 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFr
             assert(e.children[0].name.length() > 0 && banned.find(e.children[0].name[0]) == banned.end());
             string name = e.children[0].name;
 
-            if (globalFrame.find(name) != globalFrame.end()) {
-                if (globalFrame[name].type == TYPE_MATRIX || globalFrame[name].type == TYPE_VECTOR) {
-                    delete globalFrame[name].ptr;
+            if (global_frame.find(name) != global_frame.end()) {
+                if (global_frame[name].type == TYPE_MATRIX || global_frame[name].type == TYPE_VECTOR) {
+                    delete global_frame[name].ptr;
                 }
             }
 
-            DataContainer value = evaluate(e.children[0], globalFrame);
+            DataContainer value = evaluate(e.children[0], global_frame);
             if (!value.anon && (value.type == TYPE_MATRIX || value.type == TYPE_VECTOR)) {
                 if (value.type == TYPE_VECTOR) {
                     value.ptr = new vector<Fraction>(*(vector<Fraction>*)value.ptr);
@@ -117,18 +120,18 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFr
             } else {
                 value.anon = false;
             }
-            globalFrame[name] = value;
+            global_frame[name] = value;
             return value;
         } else {
-            DataContainer funcData = evaluate(e.children[0], globalFrame);
+            DataContainer funcData = evaluate(e.children[0], global_frame);
             assert(funcData.type == TYPE_FUNCTION);
-            Function f = *(Function*)(funcData.ptr);
-            assert(f.args.size() == e.children.size() - 1);
-            vector<DataContainer> args;
-            for (int i = 0; i < f.args.size(); i++) {
-                DataContainer arg = evaluate(e.children[i+1], globalFrame);
+            Function f = funcData.function;
+            assert(f.arglen == e.children.size() - 1);
+            DataContainer args[f.arglen];
+            for (int i = 0; i < f.arglen; i++) {
+                DataContainer arg = evaluate(e.children[i+1], global_frame);
                 assert(arg.type == f.args[i]);
-                args.push_back(arg);
+                args[i] = arg;
             }
             DataContainer ret = f.func(args);
             for (DataContainer arg : args) {
@@ -139,8 +142,8 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFr
             return ret;
        }
     } else {
-        assert(globalFrame.find(e.name) != globalFrame.end());
-        return globalFrame[e.name];
+        assert(global_frame.find(e.name) != global_frame.end());
+        return global_frame[e.name];
     }
 }
 
@@ -179,8 +182,11 @@ void print_expression(Expression expression) {
 
 void process_expression() {
     string line;
+    getline(cin, line); // clear
     getline(cin, line);
     queue<string> tokens = tokenize(line);
     Expression expression = parse(tokens, true);
-    print_expression(expression);
+    DataContainer result = evaluate(expression, base_global_frame);
+    print_matrix(*(vector<vector<Fraction>>*)(result.ptr));
+    delete result.ptr;
 }
