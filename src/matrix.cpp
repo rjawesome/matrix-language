@@ -98,7 +98,7 @@ vector<vector<Fraction>> mat_mul(vector<vector<Fraction>> const &matrix1, vector
     vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
     for (int i = 0; i < matrix1.size(); i++) {
         for (int j = 0; j < matrix2[0].size(); j++) {
-            Fraction sum;
+            Fraction sum = {0, 1, 1};
             for (int k = 0; k < matrix2.size(); k++) {
                 sum = add_frac(sum, mul_frac(matrix1[i][k], matrix2[k][j]));
             }

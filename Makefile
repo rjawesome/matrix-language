@@ -3,7 +3,7 @@ all: main
 
 # Rule to build the target executable
 main:
-	g++ -std=c++17 -Iinc src/*.cpp -o main.out
+	g++ -std=c++17 -g -Iinc src/*.cpp -o main.out
 
 # Rule to clean up build files
 clean:

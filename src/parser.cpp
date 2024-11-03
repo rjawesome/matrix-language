@@ -1,11 +1,7 @@
 #include "parser.h"
-struct Expression {
-    string name;
-    vector<Expression> children;
-};
 
 set<char> special_tokens{')', '(', ',', '+', '*', '^', '='};
-set<char> banned{'1','2','3','4','5','6','7','8','9','0','/','-'};
+
 set<string> infix_tokens{"+", "*", "^", "="};
 
 map<string, int> priority = {
@@ -15,27 +11,7 @@ map<string, int> priority = {
     {"^", 3}
 };
 
-DataContainer get_matrix_adjusted(DataContainer args[]) {
-    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(get_matrix()));
-    return {TYPE_MATRIX, false, .ptr = matrix};
-}
-
-DataContainer rref_adjusted(DataContainer args[]) {
-    vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(rref(input)));
-    return {TYPE_MATRIX, false, .ptr = matrix};
-}
-
-map<string, DataContainer> base_global_frame = {
-    {"get_matrix", {TYPE_FUNCTION, false, .function = {0, {}, TYPE_MATRIX, get_matrix_adjusted} }},
-    {"rref", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, rref_adjusted }}}
-};
-
-inline bool is_ptr(DataType t) {
-    return t == TYPE_MATRIX || t == TYPE_VECTOR;
-}
-
-Expression parse(queue<string> &tokens, bool infix) {
+Expression parseTokens(queue<string> &tokens, bool infix) {
     if (tokens.empty()) assert(false);
 
     Expression cur_expression;
@@ -44,7 +20,7 @@ Expression parse(queue<string> &tokens, bool infix) {
     if (cur_token == ")") assert(false);
 
     if (cur_token == "(") {
-        cur_expression = parse(tokens, true);
+        cur_expression = parseTokens(tokens, true);
         assert(!tokens.empty() && tokens.front() == ")");
         tokens.pop();
     } else {
@@ -61,7 +37,7 @@ Expression parse(queue<string> &tokens, bool infix) {
         results.push(cur_expression);
         while (!tokens.empty() && infix_tokens.find(tokens.front()) != infix_tokens.end()) {
             string cur_operator = tokens.front(); tokens.pop();
-            Expression next_expression = parse(tokens, false);
+            Expression next_expression = parseTokens(tokens, false);
             while (operators.size() > 0 && priority[operators.top()] >= priority[cur_operator]) {
                 assert(results.size() >= 2);
                 string op = operators.top(); operators.pop();
@@ -90,7 +66,7 @@ Expression parse(queue<string> &tokens, bool infix) {
         cur_expression = {"function", {cur_expression}};
         tokens.pop();
         while (!tokens.empty() && tokens.front() != ")") {
-            Expression child_expression = parse(tokens, true);
+            Expression child_expression = parseTokens(tokens, true);
             cur_expression.children.push_back(child_expression);
 
             if (tokens.front() == ",") {
@@ -104,58 +80,6 @@ Expression parse(queue<string> &tokens, bool infix) {
     }
 
     return cur_expression;
-}
-
-DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
-    if (e.children.size() > 0) {
-       if (e.children[0].name == "=") {
-            assert(e.children.size() == 3);
-            assert(e.children[1].children.size() == 0);
-            assert(e.children[1].name.length() > 0 && banned.find(e.children[0].name[0]) == banned.end());
-            string name = e.children[1].name;
-
-            if (global_frame.find(name) != global_frame.end()) {
-                if (is_ptr(global_frame[name].type)) {
-                    delete global_frame[name].ptr;
-                }
-            }
-
-            DataContainer value = evaluate(e.children[2], global_frame);
-            if (!value.anon && is_ptr(value.type)) {
-                if (value.type == TYPE_VECTOR) {
-                    value.ptr = new vector<Fraction>(*(vector<Fraction>*)value.ptr);
-                } 
-                if (value.type == TYPE_MATRIX) {
-                    value.ptr = new vector<vector<Fraction>>(*(vector<vector<Fraction>>*)value.ptr);
-                }
-            } else {
-                value.anon = false;
-            }
-            global_frame[name] = value;
-            return value;
-        } else {
-            DataContainer funcData = evaluate(e.children[0], global_frame);
-            assert(funcData.type == TYPE_FUNCTION);
-            Function f = funcData.function;
-            assert(f.arglen == e.children.size() - 1);
-            DataContainer args[f.arglen];
-            for (int i = 0; i < f.arglen; i++) {
-                DataContainer arg = evaluate(e.children[i+1], global_frame);
-                assert(arg.type == f.args[i]);
-                args[i] = arg;
-            }
-            DataContainer ret = f.func(args);
-            for (DataContainer arg : args) {
-                if (arg.anon && is_ptr(arg.type)) {
-                    delete arg.ptr;
-                }
-            }
-            return ret;
-       }
-    } else {
-        assert(global_frame.find(e.name) != global_frame.end());
-        return global_frame[e.name];
-    }
 }
 
 queue<string> tokenize(string line) {
@@ -182,42 +106,7 @@ queue<string> tokenize(string line) {
     return tokens;
 }
 
-void print_expression(Expression expression) {
-    cout << "value: " << expression.name << endl;;
-    for (int i = 0; i < expression.children.size(); i++) {
-        cout << "child #" << i << endl;
-        print_expression(expression.children[i]);
-        cout << "-----" << endl;
-    }
-}
-
-void print_data(DataContainer c) {
-    if (c.type == TYPE_MATRIX) {
-        print_matrix(*(vector<vector<Fraction>>*)(c.ptr));
-    }
-    if (c.type == TYPE_VECTOR) {
-        print_vector(*(vector<Fraction>*)(c.ptr));
-    }
-    if (c.type == TYPE_FRACTION) {
-        print_frac(c.frac);
-    }
-    if (c.type == TYPE_FUNCTION) {
-        cout << "<function>" << endl;
-    }
-}
-
-void process_expression() {
-    string line;
-    while (true) {
-        cout << ">> ";
-        getline(cin, line);
-        queue<string> tokens = tokenize(line);
-        Expression expression = parse(tokens, true);
-        DataContainer result = evaluate(expression, base_global_frame);
-        print_data(result);
-        
-        if (result.anon && (result.type == TYPE_MATRIX || result.type == TYPE_VECTOR)) {
-            delete result.ptr;
-        }
-    }
+Expression parseString(string s) {
+    queue<string> tokens = tokenize(s);
+    return parseTokens(tokens, true);
 }

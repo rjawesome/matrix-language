@@ -57,7 +57,6 @@ void multiple_solutions(vector<vector<Fraction>>& matrix, int variables) {
 
 void solve_equations (const vector<vector<Fraction>>& original) {
     vector<vector<Fraction>> matrix = rref(original);
-    print_matrix(matrix);
 
     int rows = matrix.size();
     int cols = matrix[0].size();

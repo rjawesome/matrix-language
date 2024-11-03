@@ -6,7 +6,6 @@
 #include "vector.h"
 #include <vector>
 #include "assert.h"
-#include "parser.h"
 using namespace std;
 
 vector<vector<Fraction>> get_matrix();
