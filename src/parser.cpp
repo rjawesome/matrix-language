@@ -1,18 +1,36 @@
-#include <bits/stdc++.h>
-using namespace std;
-
+#include "parser.h"
 struct Expression {
     string name;
     vector<Expression> children;
 };
 
+enum DataType {
+    TYPE_FRACTION,
+    TYPE_VECTOR,
+    TYPE_MATRIX,
+    TYPE_FUNCTION
+};
+
+struct DataContainer {
+    DataType type;
+    shared_ptr<void> data;
+};
+
+struct Function {
+    vector<DataType> args;
+    DataType returnType;
+    DataContainer (*func)(vector<DataContainer>);
+};
+
 set<char> special_tokens{')', '(', ',', '+', '*', '^'};
+set<char> banned{'1','2','3','4','5','6','7','8','9','0','/','-'};
 set<string> infix_tokens{"+", "*", "^"};
 
 map<string, int> priority = {
-    {"+", 0},
-    {"*", 1},
-    {"^", 2}
+    {"=", 0},
+    {"+", 1},
+    {"*", 2},
+    {"^", 3}
 };
 
 Expression parse(queue<string> &tokens, bool infix) {
@@ -86,6 +104,34 @@ Expression parse(queue<string> &tokens, bool infix) {
     return cur_expression;
 }
 
+DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFrame) {
+    if (e.children.size() > 0) {
+       if (e.name == "=") {
+            assert(e.children.size() == 2);
+            assert(e.children[0].children.size() == 0);
+            assert(e.children[0].name.length() > 0 && banned.find(e.children[0].name[0]) == banned.end());
+            string name = e.children[0].name;
+            DataContainer value = evaluate(e.children[0], globalFrame);
+            globalFrame[name] = value;
+        } else {
+            DataContainer funcData = evaluate(e.children[0], globalFrame);
+            assert(funcData.type == TYPE_FUNCTION);
+            Function f = *static_pointer_cast<Function>(funcData.data);
+            assert(f.args.size() == e.children.size() - 1);
+            vector<DataContainer> args;
+            for (int i = 0; i < f.args.size(); i++) {
+                DataContainer arg = evaluate(e.children[i+1], globalFrame);
+                assert(arg.type == f.args[i]);
+                args.push_back(arg);
+            }
+            return f.func(args);
+       }
+    } else {
+        assert(globalFrame.find(e.name) != globalFrame.end());
+        return globalFrame[e.name];
+    }
+}
+
 queue<string> tokenize(string line) {
     string token = "";
     queue<string> tokens;
@@ -119,7 +165,7 @@ void print_expression(Expression expression) {
     }
 }
 
-int main() {
+void process_expression() {
     string line;
     getline(cin, line);
     queue<string> tokens = tokenize(line);

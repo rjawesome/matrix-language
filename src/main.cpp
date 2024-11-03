@@ -21,6 +21,9 @@ int main () {
         cout << "R" << endl;
         print_matrix(R);
         return 0;
+    } else if (o.compare("p") == 0) {
+        process_expression();
+        return 0;
     }
     cout << "Invalid operation" << endl;
     return 1;

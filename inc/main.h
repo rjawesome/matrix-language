@@ -3,5 +3,6 @@
 #include "vector.h"
 #include "matrix.h"
 #include "equations.h"
+#include "parser.h"
 
 using namespace std;
