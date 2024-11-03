@@ -4,9 +4,9 @@ struct Expression {
     vector<Expression> children;
 };
 
-set<char> special_tokens{')', '(', ',', '+', '*', '^'};
+set<char> special_tokens{')', '(', ',', '+', '*', '^', '='};
 set<char> banned{'1','2','3','4','5','6','7','8','9','0','/','-'};
-set<string> infix_tokens{"+", "*", "^"};
+set<string> infix_tokens{"+", "*", "^", "="};
 
 map<string, int> priority = {
     {"=", 0},
@@ -20,9 +20,20 @@ DataContainer get_matrix_adjusted(DataContainer args[]) {
     return {TYPE_MATRIX, false, .ptr = matrix};
 }
 
+DataContainer rref_adjusted(DataContainer args[]) {
+    vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
+    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(rref(input)));
+    return {TYPE_MATRIX, false, .ptr = matrix};
+}
+
 map<string, DataContainer> base_global_frame = {
     {"get_matrix", {TYPE_FUNCTION, false, .function = {0, {}, TYPE_MATRIX, get_matrix_adjusted} }},
+    {"rref", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, rref_adjusted }}}
 };
+
+inline bool is_ptr(DataType t) {
+    return t == TYPE_MATRIX || t == TYPE_VECTOR;
+}
 
 Expression parse(queue<string> &tokens, bool infix) {
     if (tokens.empty()) assert(false);
@@ -97,20 +108,20 @@ Expression parse(queue<string> &tokens, bool infix) {
 
 DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
     if (e.children.size() > 0) {
-       if (e.name == "=") {
-            assert(e.children.size() == 2);
-            assert(e.children[0].children.size() == 0);
-            assert(e.children[0].name.length() > 0 && banned.find(e.children[0].name[0]) == banned.end());
-            string name = e.children[0].name;
+       if (e.children[0].name == "=") {
+            assert(e.children.size() == 3);
+            assert(e.children[1].children.size() == 0);
+            assert(e.children[1].name.length() > 0 && banned.find(e.children[0].name[0]) == banned.end());
+            string name = e.children[1].name;
 
             if (global_frame.find(name) != global_frame.end()) {
-                if (global_frame[name].type == TYPE_MATRIX || global_frame[name].type == TYPE_VECTOR) {
+                if (is_ptr(global_frame[name].type)) {
                     delete global_frame[name].ptr;
                 }
             }
 
-            DataContainer value = evaluate(e.children[0], global_frame);
-            if (!value.anon && (value.type == TYPE_MATRIX || value.type == TYPE_VECTOR)) {
+            DataContainer value = evaluate(e.children[2], global_frame);
+            if (!value.anon && is_ptr(value.type)) {
                 if (value.type == TYPE_VECTOR) {
                     value.ptr = new vector<Fraction>(*(vector<Fraction>*)value.ptr);
                 } 
@@ -135,7 +146,7 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_f
             }
             DataContainer ret = f.func(args);
             for (DataContainer arg : args) {
-                if (arg.anon && (arg.type == TYPE_MATRIX || arg.type == TYPE_VECTOR)) {
+                if (arg.anon && is_ptr(arg.type)) {
                     delete arg.ptr;
                 }
             }
@@ -180,13 +191,33 @@ void print_expression(Expression expression) {
     }
 }
 
+void print_data(DataContainer c) {
+    if (c.type == TYPE_MATRIX) {
+        print_matrix(*(vector<vector<Fraction>>*)(c.ptr));
+    }
+    if (c.type == TYPE_VECTOR) {
+        print_vector(*(vector<Fraction>*)(c.ptr));
+    }
+    if (c.type == TYPE_FRACTION) {
+        print_frac(c.frac);
+    }
+    if (c.type == TYPE_FUNCTION) {
+        cout << "<function>" << endl;
+    }
+}
+
 void process_expression() {
     string line;
-    getline(cin, line); // clear
-    getline(cin, line);
-    queue<string> tokens = tokenize(line);
-    Expression expression = parse(tokens, true);
-    DataContainer result = evaluate(expression, base_global_frame);
-    print_matrix(*(vector<vector<Fraction>>*)(result.ptr));
-    delete result.ptr;
+    while (true) {
+        cout << ">> ";
+        getline(cin, line);
+        queue<string> tokens = tokenize(line);
+        Expression expression = parse(tokens, true);
+        DataContainer result = evaluate(expression, base_global_frame);
+        print_data(result);
+        
+        if (result.anon && (result.type == TYPE_MATRIX || result.type == TYPE_VECTOR)) {
+            delete result.ptr;
+        }
+    }
 }

@@ -118,6 +118,7 @@ vector<vector<Fraction>> get_matrix() {
             load_frac(s, matrix[i][j]);
         }
     }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear cin
     return matrix;
 }
 

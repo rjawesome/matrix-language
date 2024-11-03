@@ -2,6 +2,7 @@
 
 int main () {
     string o; cin >> o;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); // clear cin
     if (o.compare("gram") == 0) {
         vector<vector<Fraction>> matrix = get_matrix();
         matrix = transpose(orthonormalize_rows(transpose(matrix)));
