@@ -1,6 +1,7 @@
 #include "matrix.h"
 
-void rref(vector<vector<Fraction>> &matrix) {
+vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
+    vector<vector<Fraction>> matrix = original;
     assert(matrix.size() > 0);
     int rows = matrix.size();
     int cols = matrix[0].size();
@@ -64,6 +65,7 @@ void rref(vector<vector<Fraction>> &matrix) {
             }
         }
     }
+    return matrix;
 }
 
 vector<vector<Fraction>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {

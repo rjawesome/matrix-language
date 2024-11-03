@@ -6,4 +6,4 @@
 
 using namespace std;
 
-void solve_equations(vector<vector<Fraction>> &matrix);
+void solve_equations(const vector<vector<Fraction>> &matrix);

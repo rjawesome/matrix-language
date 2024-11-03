@@ -113,6 +113,7 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &globalFr
             string name = e.children[0].name;
             DataContainer value = evaluate(e.children[0], globalFrame);
             globalFrame[name] = value;
+            return value;
         } else {
             DataContainer funcData = evaluate(e.children[0], globalFrame);
             assert(funcData.type == TYPE_FUNCTION);

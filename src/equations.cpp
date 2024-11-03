@@ -7,7 +7,13 @@ void no_solutions() {
 void one_solution(vector<vector<Fraction>>& matrix, int variables) {
     cout << "One solution!" << endl;
     vector<Fraction> solution(variables);
-    for (int i = 0; i < variables; i++) solution[i] = matrix[i][variables];
+    int cur_pos = 0;
+    for (int i = 0; i < matrix.size() && cur_pos < variables; i++) {
+        if (matrix[i][cur_pos].numerator != 0) {
+            solution[cur_pos] = matrix[i][variables];
+            cur_pos++;
+        }
+    }
     print_vector(solution);
 }
 
@@ -49,11 +55,12 @@ void multiple_solutions(vector<vector<Fraction>>& matrix, int variables) {
     print_vector(offset);
 }
 
-void solve_equations (vector<vector<Fraction>>& matrix) {
+void solve_equations (const vector<vector<Fraction>>& original) {
+    vector<vector<Fraction>> matrix = rref(original);
+    print_matrix(matrix);
+
     int rows = matrix.size();
     int cols = matrix[0].size();
-
-    rref(matrix);
 
     int equations = 0;
     for (int i = 0; i < rows; i++) {
