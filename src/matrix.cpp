@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-variant<string_view, vector<vector<Fraction>>> rref(const vector<vector<Fraction>> &original) {
+vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
     vector<vector<Fraction>> matrix = original;
     if (matrix.size() == 0) {
         return vector<vector<Fraction>>();
