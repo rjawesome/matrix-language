@@ -6,9 +6,23 @@ inline bool is_ptr(DataType t) {
     return t == TYPE_MATRIX || t == TYPE_VECTOR;
 }
 
+DataContainer duplicate(DataContainer value) {
+    if (!value.anon && is_ptr(value.type)) {
+        if (value.type == TYPE_VECTOR) {
+            value.ptr = new vector<Fraction>(*(vector<Fraction>*)value.ptr);
+        } 
+        if (value.type == TYPE_MATRIX) {
+            value.ptr = new vector<vector<Fraction>>(*(vector<vector<Fraction>>*)value.ptr);
+        }
+    } else {
+        value.anon = false;
+    }
+    return value;
+}
+
 DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
     if (e.children.size() > 0) {
-       if (e.children[0].name == "=") {
+        if (e.children[0].name == "=") {
             assert(e.children.size() == 3);
             assert(e.children[1].children.size() == 0);
             assert(e.children[1].name.length() > 0 && banned_var_starts.find(e.children[0].name[0]) == banned_var_starts.end());
@@ -20,17 +34,7 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_f
                 }
             }
 
-            DataContainer value = evaluate(e.children[2], global_frame);
-            if (!value.anon && is_ptr(value.type)) {
-                if (value.type == TYPE_VECTOR) {
-                    value.ptr = new vector<Fraction>(*(vector<Fraction>*)value.ptr);
-                } 
-                if (value.type == TYPE_MATRIX) {
-                    value.ptr = new vector<vector<Fraction>>(*(vector<vector<Fraction>>*)value.ptr);
-                }
-            } else {
-                value.anon = false;
-            }
+            DataContainer value = duplicate(evaluate(e.children[2], global_frame));
             global_frame[name] = value;
             return value;
         } else {
