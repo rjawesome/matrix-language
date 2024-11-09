@@ -2,7 +2,9 @@
 
 variant<string_view, vector<vector<Fraction>>> rref(const vector<vector<Fraction>> &original) {
     vector<vector<Fraction>> matrix = original;
-    assert(matrix.size() > 0);
+    if (matrix.size() == 0) {
+        return vector<vector<Fraction>>();
+    }
     int rows = matrix.size();
     int cols = matrix[0].size();
     // ref
@@ -69,13 +71,18 @@ variant<string_view, vector<vector<Fraction>>> rref(const vector<vector<Fraction
 }
 
 variant<string_view, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {
-    assert(matrix.size() > 0);
+    if (matrix.size() == 0) {
+        return vector<vector<Fraction>>();
+    }
     vector<vector<Fraction>> output(matrix.size());
     for (int i = 0; i < matrix.size(); i++) {
         output[i] = matrix[i];
         for (int j = i-1; j >= 0; j--) {
             vector<Fraction> proj = mul_vector(dot(matrix[i], output[j]), output[j]);
             output[i] = sub_vectors(output[i], proj);
+        }
+        if (dot(output[i], output[i]).numerator == 0) {
+            return "The vectors to be orthonormalized are not linearly independent";
         }
         output[i] = normalize(output[i]);
     }
@@ -96,7 +103,7 @@ vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix) {
 }
 
 variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
-    assert(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size());
+    expect(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size(), "Matrix multiplication dimensions invalid");
     vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
     for (int i = 0; i < matrix1.size(); i++) {
         for (int j = 0; j < matrix2[0].size(); j++) {
@@ -112,7 +119,7 @@ variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> 
 
 variant<string_view, vector<vector<Fraction>>> get_matrix() {
     int rows, cols; cin >> rows >> cols;
-    assert(rows > 0 && cols > 0);
+    expect(rows > 0 && cols > 0, "Matrix needs positive rows and columns");
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {

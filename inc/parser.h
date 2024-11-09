@@ -6,7 +6,6 @@
 #include <queue>
 #include <stack>
 #include <string>
-#include <cassert>
 #include "types.h"
 using namespace std;
 

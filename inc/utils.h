@@ -1,6 +1,8 @@
 #ifndef UTILS
 #define UTILS
 
+#define expect(x, y) do { if (!(x)) return y; } while (false);
+
 #include "fraction.h"
 #include "math.h"
 #include <variant>

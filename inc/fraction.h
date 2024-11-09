@@ -2,8 +2,8 @@
 #define FRACTION
 
 #include <iostream>
-#include <cassert>
 #include "utils.h"
+#include <cassert>
 using namespace std;
 
 struct Fraction {

@@ -12,19 +12,19 @@ map<string, int> priority = {
 };
 
 variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) {
-    if (tokens.empty()) assert(false);
+    if (tokens.empty()) return "Expected more tokens";
 
     Expression cur_expression;
     string cur_token = tokens.front(); tokens.pop();
 
-    if (cur_token == ")") assert(false);
+    if (cur_token == ")") return ") without matching (";
 
     if (cur_token == "(") {
         variant<string_view, Expression> cur_expr_res = parseTokens(tokens, true);
         if (holds_alternative<string_view>(cur_expr_res)) return cur_expr_res;
         cur_expression = get<Expression>(cur_expr_res);
 
-        assert(!tokens.empty() && tokens.front() == ")");
+        expect(!tokens.empty() && tokens.front() == ")", "( was not closed");
         tokens.pop();
     } else {
         cur_expression = {cur_token};
@@ -46,7 +46,7 @@ variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) 
             Expression next_expression = get<Expression>(next_expr_res);
 
             while (operators.size() > 0 && priority[operators.top()] >= priority[cur_operator]) {
-                assert(results.size() >= 2);
+                expect(results.size() >= 2, "Not enough arguments for infix operator");
                 string op = operators.top(); operators.pop();
                 Expression rhs = results.top(); results.pop();
                 Expression lhs = results.top(); results.pop();
@@ -57,14 +57,14 @@ variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) 
             operators.push(cur_operator);
         }
         while (operators.size() > 0) {
-            assert(results.size() >= 2);
+            expect(results.size() >= 2, "Not enough arguments for infix operator");
             string op = operators.top(); operators.pop();
             Expression rhs = results.top(); results.pop();
             Expression lhs = results.top(); results.pop();
             results.push({"function", {{op}, lhs, rhs}});
         }
 
-        assert(results.size() == 1);
+        expect(results.size() == 1, "Infix expression does not evaluate to one value");
         cur_expression = results.top();
     }
 
@@ -83,10 +83,10 @@ variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) 
             if (tokens.front() == ",") {
                 tokens.pop();
             } else if (tokens.front() != ")") {
-                assert(false);
+                return "Arguments to function formatted badly";
             }
         }
-        assert(!tokens.empty());
+        expect(!tokens.empty(), "Arguments to function formatted badly");
         tokens.pop();
     }
 

@@ -24,9 +24,9 @@ DataContainer duplicate(DataContainer value) {
 variant<string_view, DataContainer> evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
     if (e.children.size() > 0) {
         if (e.children[0].name == "=") {
-            assert(e.children.size() == 3);
-            assert(e.children[1].children.size() == 0);
-            assert(e.children[1].name.length() > 0 && banned_var_starts.find(e.children[0].name[0]) == banned_var_starts.end());
+            expect(e.children.size() == 3, "Wrong amount of operands for equals");
+            expect(e.children[1].children.size() == 0, "Cannot assign to expression");
+            expect(e.children[1].name.length() > 0 && banned_var_starts.find(e.children[0].name[0]) == banned_var_starts.end(), "Bad variable name");
             string name = e.children[1].name;
 
             variant<string_view, DataContainer> value = evaluate(e.children[2], global_frame);
@@ -50,9 +50,9 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
             }
             DataContainer func_data = get<DataContainer>(func_data_res);
 
-            assert(func_data.type == TYPE_FUNCTION);
+            expect(func_data.type == TYPE_FUNCTION, "Cannot call non-function");
             Function f = func_data.function;
-            assert(f.arglen == e.children.size() - 1);
+            expect(f.arglen == e.children.size() - 1, "Wrong amount of arguments for function");
 
             DataContainer args[f.arglen];
             int evaluated_args = 0;
@@ -88,7 +88,7 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
         load_frac(e.name, c.frac);
         return c;
     } else {
-        assert(global_frame.find(e.name) != global_frame.end());
+        expect(global_frame.find(e.name) != global_frame.end(), "Variable is not defined");
         return global_frame[e.name];
     }
 }
