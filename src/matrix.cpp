@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
+variant<string_view, vector<vector<Fraction>>> rref(const vector<vector<Fraction>> &original) {
     vector<vector<Fraction>> matrix = original;
     assert(matrix.size() > 0);
     int rows = matrix.size();
@@ -68,7 +68,7 @@ vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
     return matrix;
 }
 
-vector<vector<Fraction>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {
+variant<string_view, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {
     assert(matrix.size() > 0);
     vector<vector<Fraction>> output(matrix.size());
     for (int i = 0; i < matrix.size(); i++) {
@@ -83,7 +83,9 @@ vector<vector<Fraction>> orthonormalize_rows(vector<vector<Fraction>> const &mat
 }
 
 vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix) {
-    assert(matrix.size() > 0);
+    if (matrix.size() == 0) {
+        return vector<vector<Fraction>>();
+    }
     vector<vector<Fraction>> t(matrix[0].size(), vector<Fraction>(matrix.size()));
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[0].size(); j++) {
@@ -93,7 +95,7 @@ vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix) {
     return t;
 }
 
-vector<vector<Fraction>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
+variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
     assert(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size());
     vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
     for (int i = 0; i < matrix1.size(); i++) {
@@ -108,7 +110,7 @@ vector<vector<Fraction>> mat_mul(vector<vector<Fraction>> const &matrix1, vector
     return output;
 }
 
-vector<vector<Fraction>> get_matrix() {
+variant<string_view, vector<vector<Fraction>>> get_matrix() {
     int rows, cols; cin >> rows >> cols;
     assert(rows > 0 && cols > 0);
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));

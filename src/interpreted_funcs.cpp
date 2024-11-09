@@ -1,14 +1,18 @@
 #include "interpreted_funcs.h"
 
 variant<string_view, DataContainer> get_matrix_int(DataContainer args[]) {
-    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(get_matrix()));
-    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
+    variant<string_view, vector<vector<Fraction>>> matrix = get_matrix();
+    return holds_alternative<string_view>(matrix) ? 
+        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+        DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
 variant<string_view, DataContainer> rref_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(rref(input)));
-    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
+    variant<string_view, vector<vector<Fraction>>> matrix = rref(input);
+    return holds_alternative<string_view>(matrix) ? 
+        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+        DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
 variant<string_view, DataContainer> solve_equations_int(DataContainer args[]) {
@@ -19,16 +23,20 @@ variant<string_view, DataContainer> solve_equations_int(DataContainer args[]) {
 
 variant<string_view, DataContainer> orthonormalize_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    vector<vector<Fraction>> output = transpose(orthonormalize_rows(transpose(input)));
-    vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(output));
-    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
+    variant<string_view, vector<vector<Fraction>>> matrix = orthonormalize_rows(transpose(input));
+    if (holds_alternative<vector<vector<Fraction>>>(matrix)) matrix = transpose(get<vector<vector<Fraction>>>(matrix));
+    return holds_alternative<string_view>(matrix) ? 
+        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+        DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
 variant<string_view, DataContainer> qr_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    vector<vector<Fraction>> qT = orthonormalize_rows(transpose(input));
+    variant<string_view, vector<vector<Fraction>>> qT_res = orthonormalize_rows(transpose(input));
+    if (holds_alternative<string_view>(qT_res)) return get<string_view>(qT_res);
+    auto qT = get<vector<vector<Fraction>>>(qT_res);
     vector<vector<Fraction>> Q = transpose(qT);
-    vector<vector<Fraction>> R = mat_mul(qT, input);
+    vector<vector<Fraction>> R = get<vector<vector<Fraction>>>(mat_mul(qT, input));
     vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(R));
     return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
 }
