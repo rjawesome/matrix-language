@@ -30,6 +30,22 @@ variant<string_view, DataContainer> orthonormalize(DataContainer args[]) {
         DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
+variant<string_view, DataContainer> inverse(DataContainer args[]) {
+    vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
+    variant<string_view, vector<vector<Fraction>>> matrix = inverse(input);
+    return holds_alternative<string_view>(matrix) ? 
+        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+        DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
+}
+
+variant<string_view, DataContainer> determinant(DataContainer args[]) {
+    vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
+    variant<string_view, Fraction> determ = determinant(input);
+    return holds_alternative<string_view>(determ) ? 
+        variant<string_view, DataContainer>(get<string_view>(determ)) :
+        DataContainer{TYPE_FRACTION, true, .frac = get<Fraction>(determ)};
+}
+
 variant<string_view, DataContainer> qr(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
     variant<string_view, vector<vector<Fraction>>> qT_res = orthonormalize_rows(transpose(input));
@@ -104,6 +120,8 @@ map<string, DataContainer> base_global_frame = {
     {"rows", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, rows }}},
     {"cols", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, cols }}},
     {"transpose", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, transpose }}},
+    {"inverse", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, inverse }}},
+    {"determinant", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, determinant }}},
     {"+", {TYPE_FUNCTION, false, .function = {2, {TYPE_ANY, TYPE_ANY}, TYPE_ANY, add }}},
     {"*", {TYPE_FUNCTION, false, .function = {2, {TYPE_ANY, TYPE_ANY}, TYPE_ANY, mult }}}
 };

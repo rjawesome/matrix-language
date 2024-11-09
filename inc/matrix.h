@@ -16,5 +16,7 @@ vector<vector<Fraction>> matrix_scale(Fraction f, vector<vector<Fraction>> const
 variant<string_view, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix);
 variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2);
 vector<vector<Fraction>> rref(const vector<vector<Fraction>> &matrix);
+variant<string_view, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> &matrix);
+variant<string_view, Fraction> determinant(const vector<vector<Fraction>> &matrix);
 
 #endif

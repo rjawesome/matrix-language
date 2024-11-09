@@ -70,6 +70,189 @@ vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
     return matrix;
 }
 
+// similar to rref algorithm
+variant<string_view, Fraction> determinant(const vector<vector<Fraction>> &original) {
+    if (original.size() == 0) {
+        return Fraction{0, 1, 1};
+    }
+    expect(original.size() == original[0].size(), "Cannot take determinant of non-square matrix");
+    Fraction determ = {1, 1, 1};
+    vector<vector<Fraction>> matrix = original;
+    int rows = matrix.size();
+    int cols = matrix[0].size();
+    // ref
+    for (int i = 0; i < min(rows, cols); i++) {
+        if (matrix[i][i].numerator == 0) {
+            // see if we need to do a swap
+            for (int j = i + 1; j < rows; j++) {
+                if (matrix[j][i].numerator != 0) {
+                    // swap
+                    for (int k = 0; k < cols; k++) {
+                        Fraction temp = matrix[i][k];
+                        matrix[i][k] = matrix[j][k];
+                        matrix[j][k] = temp;
+                    }
+                    determ = negate_frac(determ);
+                    break;
+                }
+            }
+        }
+        for (int j = i + 1; j < rows; j++) {
+            if (matrix[j][i].numerator != 0) {
+                Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
+                for (int k = 0; k < cols; k++) {
+                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                }
+            }
+        }
+    }
+
+    // reverse ref
+    for (int i = min(rows,cols)-1; i >= 0; i--) {
+        if (matrix[i][i].numerator == 0) {
+            // see if we need to do a swap
+            for (int j = i - 1; j >= 0; j--) {
+                if (matrix[j][i].numerator != 0) {
+                    // swap
+                    for (int k = 0; k < cols; k++) {
+                        Fraction temp = matrix[i][k];
+                        matrix[i][k] = matrix[j][k];
+                        matrix[j][k] = temp;
+                    }
+                    determ = negate_frac(determ);
+                    break;
+                }
+            }
+        }
+
+        // normalize this row (if necessary)
+        if (matrix[i][i].numerator != 0) {
+            Fraction mul = inverse_frac(matrix[i][i]);
+            determ = mul_frac(determ, matrix[i][i]);
+            for (int k = 0; k < cols; k++) {
+                matrix[i][k] = mul_frac(matrix[i][k], mul);
+            }
+        }
+
+        for (int j = i - 1; j >= 0; j--) {
+            if (matrix[j][i].numerator != 0) {
+                Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
+                for (int k = 0; k < cols; k++) {
+                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                }
+            }
+        }
+    }
+    // check that the matrix is identity
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix.size(); j++) {
+            if (matrix[i][j].numerator != 0 && i != j) return Fraction{0, 1, 1};
+            if (matrix[i][j].numerator == 0 && i == j) return Fraction{0, 1, 1};
+        }
+    }
+    return determ;
+}
+
+
+// similar to rref algorithm
+variant<string_view, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> &original) {
+    vector<vector<Fraction>> matrix = original;
+    if (matrix.size() == 0) {
+        return matrix;
+    }
+    expect(matrix.size() == matrix[0].size(), "Cannot take inverse of non-square matrix");
+    int rows = matrix.size();
+    int cols = matrix[0].size();
+    vector<vector<Fraction>> inverse = vector<vector<Fraction>>(rows, vector<Fraction>(cols));
+    // gen identity
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < rows; j++) {
+            if (i == j) inverse[i][j] = {1, 1, 1};
+            else inverse[i][j] = {0, 1, 1};
+        }
+    }
+    // ref
+    for (int i = 0; i < min(rows, cols); i++) {
+        if (matrix[i][i].numerator == 0) {
+            // see if we need to do a swap
+            for (int j = i + 1; j < rows; j++) {
+                if (matrix[j][i].numerator != 0) {
+                    // swap
+                    for (int k = 0; k < cols; k++) {
+                        Fraction temp = matrix[i][k];
+                        matrix[i][k] = matrix[j][k];
+                        matrix[j][k] = temp;
+
+                        Fraction temp2 = inverse[i][k];
+                        inverse[i][k] = inverse[j][k];
+                        inverse[j][k] = temp;
+                    }
+                    break;
+                }
+            }
+        }
+        for (int j = i + 1; j < rows; j++) {
+            if (matrix[j][i].numerator != 0) {
+                Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
+                for (int k = 0; k < cols; k++) {
+                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                    inverse[j][k] = add_frac(inverse[j][k], mul_frac(inverse[i][k], mul));
+                }
+            }
+        }
+    }
+
+    // reverse ref
+    for (int i = min(rows,cols)-1; i >= 0; i--) {
+        if (matrix[i][i].numerator == 0) {
+            // see if we need to do a swap
+            for (int j = i - 1; j >= 0; j--) {
+                if (matrix[j][i].numerator != 0) {
+                    // swap
+                    for (int k = 0; k < cols; k++) {
+                        Fraction temp = matrix[i][k];
+                        matrix[i][k] = matrix[j][k];
+                        matrix[j][k] = temp;
+
+                        Fraction temp2 = inverse[i][k];
+                        inverse[i][k] = inverse[j][k];
+                        inverse[j][k] = temp;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // normalize this row (if necessary)
+        if (matrix[i][i].numerator != 0) {
+            Fraction mul = inverse_frac(matrix[i][i]);
+            for (int k = 0; k < cols; k++) {
+                matrix[i][k] = mul_frac(matrix[i][k], mul);
+                inverse[i][k] = mul_frac(inverse[i][k], mul);
+            }
+        }
+
+        for (int j = i - 1; j >= 0; j--) {
+            if (matrix[j][i].numerator != 0) {
+                Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
+                for (int k = 0; k < cols; k++) {
+                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                    inverse[j][k] = add_frac(inverse[j][k], mul_frac(inverse[i][k], mul));
+                }
+            }
+        }
+    }
+    // check that the matrix is identity
+    for (int i = 0; i < matrix.size(); i++) {
+        for (int j = 0; j < matrix.size(); j++) {
+            if (matrix[i][j].numerator != 0 && i != j) return "Cannot take inverse of matrix with linearly dependent columns";
+            if (matrix[i][j].numerator == 0 && i == j) return "Cannot take inverse of matrix with linearly dependent columns";
+        }
+    }
+    return inverse;
+}
+
+
 variant<string_view, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {
     if (matrix.size() == 0) {
         return vector<vector<Fraction>>();
