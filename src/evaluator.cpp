@@ -64,7 +64,7 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
                     break;
                 }
                 DataContainer arg = get<DataContainer>(arg_res);
-                if (arg.type != f.args[i]) {
+                if (arg.type != f.args[i] && f.args[i] != TYPE_ANY) {
                     ret = "Function argument with invalid type";
                     break;
                 }

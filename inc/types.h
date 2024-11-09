@@ -15,7 +15,8 @@ enum DataType {
     TYPE_VECTOR,
     TYPE_MATRIX,
     TYPE_FUNCTION,
-    TYPE_NONE
+    TYPE_NONE,
+    TYPE_ANY // should not be applied to any actual data container
 };
 
 struct DataContainer;

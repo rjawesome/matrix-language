@@ -117,6 +117,28 @@ variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> 
     return output;
 }
 
+variant<string_view, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
+    expect(matrix1.size() == matrix2.size() && (matrix1.size() == 0 || matrix1[0].size() == matrix2[0].size()), "Cannot add matrices");
+    int rows = matrix1.size();
+    int cols = matrix1.size() > 0 ? matrix1[0].size() : 0;
+    vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            matrix[i][j] = add_frac(matrix1[i][j], matrix2[i][j]);
+        }
+    }
+    return matrix;
+}
+vector<vector<Fraction>> matrix_scale(Fraction f, vector<vector<Fraction>> const &matrix1) {
+    vector<vector<Fraction>> matrix(matrix1.size(), vector<Fraction>(matrix1.size() > 0 ? matrix1[0].size() : 0));
+    for (int i = 0; i < matrix1.size(); i++) {
+        for (int j = 0; j < matrix1[i].size(); j++) {
+            matrix[i][j] = mul_frac(f, matrix1[i][j]);
+        }
+    }
+    return matrix;
+}
+
 variant<string_view, vector<vector<Fraction>>> get_matrix() {
     int rows, cols; cin >> rows >> cols;
     expect(rows > 0 && cols > 0, "Matrix needs positive rows and columns");
