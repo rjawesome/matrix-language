@@ -11,7 +11,7 @@ map<string, int> priority = {
     {"^", 3}
 };
 
-Expression parseTokens(queue<string> &tokens, bool infix) {
+variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) {
     if (tokens.empty()) assert(false);
 
     Expression cur_expression;
@@ -20,7 +20,10 @@ Expression parseTokens(queue<string> &tokens, bool infix) {
     if (cur_token == ")") assert(false);
 
     if (cur_token == "(") {
-        cur_expression = parseTokens(tokens, true);
+        variant<string_view, Expression> cur_expr_res = parseTokens(tokens, true);
+        if (holds_alternative<string_view>(cur_expr_res)) return cur_expr_res;
+        cur_expression = get<Expression>(cur_expr_res);
+
         assert(!tokens.empty() && tokens.front() == ")");
         tokens.pop();
     } else {
@@ -37,7 +40,11 @@ Expression parseTokens(queue<string> &tokens, bool infix) {
         results.push(cur_expression);
         while (!tokens.empty() && infix_tokens.find(tokens.front()) != infix_tokens.end()) {
             string cur_operator = tokens.front(); tokens.pop();
-            Expression next_expression = parseTokens(tokens, false);
+
+            variant<string_view, Expression> next_expr_res = parseTokens(tokens, false);
+            if (holds_alternative<string_view>(next_expr_res)) return next_expr_res;
+            Expression next_expression = get<Expression>(next_expr_res);
+
             while (operators.size() > 0 && priority[operators.top()] >= priority[cur_operator]) {
                 assert(results.size() >= 2);
                 string op = operators.top(); operators.pop();
@@ -66,7 +73,11 @@ Expression parseTokens(queue<string> &tokens, bool infix) {
         cur_expression = {"function", {cur_expression}};
         tokens.pop();
         while (!tokens.empty() && tokens.front() != ")") {
-            Expression child_expression = parseTokens(tokens, true);
+
+            variant<string_view, Expression> child_expr_res = parseTokens(tokens, true);
+            if (holds_alternative<string_view>(child_expr_res)) return child_expr_res;
+            Expression child_expression = get<Expression>(child_expr_res);
+
             cur_expression.children.push_back(child_expression);
 
             if (tokens.front() == ",") {
@@ -106,7 +117,7 @@ queue<string> tokenize(string line) {
     return tokens;
 }
 
-Expression parseString(string s) {
+variant<string_view, Expression> parseString(string s) {
     queue<string> tokens = tokenize(s);
     return parseTokens(tokens, true);
 }

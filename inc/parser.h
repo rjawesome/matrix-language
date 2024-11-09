@@ -10,6 +10,6 @@
 #include "types.h"
 using namespace std;
 
-Expression parseString(string s);
+variant<string_view, Expression> parseString(string s);
 
 #endif

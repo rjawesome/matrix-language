@@ -1,36 +1,36 @@
 #include "interpreted_funcs.h"
 
-DataContainer get_matrix_int(DataContainer args[]) {
+variant<string_view, DataContainer> get_matrix_int(DataContainer args[]) {
     vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(get_matrix()));
-    return {TYPE_MATRIX, true, .ptr = matrix};
+    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
 }
 
-DataContainer rref_int(DataContainer args[]) {
+variant<string_view, DataContainer> rref_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
     vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(rref(input)));
-    return {TYPE_MATRIX, true, .ptr = matrix};
+    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
 }
 
-DataContainer solve_equations_int(DataContainer args[]) {
+variant<string_view, DataContainer> solve_equations_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
     solve_equations(input);
-    return {TYPE_NONE, true};
+    return DataContainer{TYPE_NONE, true};
 }
 
-DataContainer orthonormalize_int(DataContainer args[]) {
+variant<string_view, DataContainer> orthonormalize_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
     vector<vector<Fraction>> output = transpose(orthonormalize_rows(transpose(input)));
     vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(output));
-    return {TYPE_MATRIX, true, .ptr = matrix};
+    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
 }
 
-DataContainer qr_int(DataContainer args[]) {
+variant<string_view, DataContainer> qr_int(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
     vector<vector<Fraction>> qT = orthonormalize_rows(transpose(input));
     vector<vector<Fraction>> Q = transpose(qT);
     vector<vector<Fraction>> R = mat_mul(qT, input);
     vector<vector<Fraction>>* matrix = new vector<vector<Fraction>>(move(R));
-    return {TYPE_MATRIX, true, .ptr = matrix};
+    return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
 }
 
 map<string, DataContainer> base_global_frame = {

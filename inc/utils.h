@@ -3,6 +3,7 @@
 
 #include "fraction.h"
 #include "math.h"
+#include <variant>
 using namespace std;
 
 const string DASH = "-------------";

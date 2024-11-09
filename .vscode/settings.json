@@ -11,6 +11,18 @@
         "deque": "cpp",
         "string": "cpp",
         "new": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "array": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp",
+        "cassert": "cpp",
+        "span": "cpp",
+        "*.tcc": "cpp",
+        "optional": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "functional": "cpp",
+        "type_traits": "cpp"
     }
 }

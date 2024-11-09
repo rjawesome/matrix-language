@@ -24,7 +24,7 @@ struct Function {
     int arglen;
     DataType args[10];
     DataType returnType;
-    DataContainer (*func)(DataContainer[]);
+    variant<string_view, DataContainer> (*func)(DataContainer[]);
 };
 
 struct DataContainer {
