@@ -1,6 +1,7 @@
 #include "evaluator.h"
 
 set<char> banned_var_starts{'1','2','3','4','5','6','7','8','9','0','/','-'};
+set<char> frac_start{'-','1','2','3','4','5','6','7','8','9'};
 
 inline bool is_ptr(DataType t) {
     return t == TYPE_MATRIX || t == TYPE_VECTOR;
@@ -56,6 +57,10 @@ DataContainer evaluate(Expression const &e, map<string, DataContainer> &global_f
             }
             return ret;
        }
+    } else if (e.name.length() > 0 && frac_start.find(e.name[0]) != frac_start.end()) {
+        DataContainer c = {TYPE_FRACTION};
+        load_frac(e.name, c.frac);
+        return c;
     } else {
         assert(global_frame.find(e.name) != global_frame.end());
         return global_frame[e.name];
@@ -80,6 +85,7 @@ void print_data(DataContainer c) {
     }
     if (c.type == TYPE_FRACTION) {
         print_frac(c.frac);
+        cout << endl;
     }
     if (c.type == TYPE_FUNCTION) {
         cout << "<function>" << endl;
