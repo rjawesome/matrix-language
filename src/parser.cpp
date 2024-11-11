@@ -11,23 +11,23 @@ map<string, int> priority = {
     {"^", 3}
 };
 
-variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) {
-    if (tokens.empty()) return "Expected more tokens";
+variant<Error, Expression> parseTokens(queue<pair<string, int>> &tokens, bool infix) {
+    if (tokens.empty()) return Error{"Expected more tokens", 0};
 
     Expression cur_expression;
-    string cur_token = tokens.front(); tokens.pop();
+    auto [cur_token, cur_line] = tokens.front(); tokens.pop();
 
-    if (cur_token == ")") return ") without matching (";
+    if (cur_token == ")") return Error{") without matching (", cur_line};
 
     if (cur_token == "(") {
-        variant<string_view, Expression> cur_expr_res = parseTokens(tokens, true);
-        if (holds_alternative<string_view>(cur_expr_res)) return cur_expr_res;
+        variant<Error, Expression> cur_expr_res = parseTokens(tokens, true);
+        if (holds_alternative<Error>(cur_expr_res)) return cur_expr_res;
         cur_expression = get<Expression>(cur_expr_res);
 
-        expect(!tokens.empty() && tokens.front() == ")", "( was not closed");
+        if (tokens.empty() || tokens.front().first != ")") return Error{"( was not closed", cur_line};
         tokens.pop();
     } else {
-        cur_expression = {cur_token};
+        cur_expression = {cur_token, cur_line};
     }
 
     if (tokens.empty()) {
@@ -39,61 +39,61 @@ variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) 
     // we want to keep seeing if the expression needs to be extended (either infix or call expression)
     while (!exit) {
         exit = true;
-        if (infix && infix_tokens.find(tokens.front()) != infix_tokens.end()) {
+        if (infix && infix_tokens.find(tokens.front().first) != infix_tokens.end()) {
             exit = false;
-            stack<string> operators;
+            stack<pair<string, int>> operators;
             stack<Expression> results;
             results.push(cur_expression);
-            while (!tokens.empty() && infix_tokens.find(tokens.front()) != infix_tokens.end()) {
-                string cur_operator = tokens.front(); tokens.pop();
+            while (!tokens.empty() && infix_tokens.find(tokens.front().first) != infix_tokens.end()) {
+                auto [cur_operator, cur_line] = tokens.front(); tokens.pop();
 
-                variant<string_view, Expression> next_expr_res = parseTokens(tokens, false);
-                if (holds_alternative<string_view>(next_expr_res)) return next_expr_res;
+                variant<Error, Expression> next_expr_res = parseTokens(tokens, false);
+                if (holds_alternative<Error>(next_expr_res)) return next_expr_res;
                 Expression next_expression = get<Expression>(next_expr_res);
 
-                while (operators.size() > 0 && priority[operators.top()] >= priority[cur_operator]) {
-                    expect(results.size() >= 2, "Not enough arguments for infix operator");
-                    string op = operators.top(); operators.pop();
+                while (operators.size() > 0 && priority[operators.top().first] >= priority[cur_operator]) {
+                    if (results.size() < 2) return Error{"Not enough arguments for infix operator", operators.top().second};
+                    auto [op, line] = operators.top(); operators.pop();
                     Expression rhs = results.top(); results.pop();
                     Expression lhs = results.top(); results.pop();
-                    results.push({"function", {{op}, lhs, rhs}});
+                    results.push({"function", line, {{op}, lhs, rhs}});
                 }
                 
                 results.push(next_expression);
-                operators.push(cur_operator);
+                operators.push({cur_operator, cur_line});
             }
             while (operators.size() > 0) {
-                expect(results.size() >= 2, "Not enough arguments for infix operator");
-                string op = operators.top(); operators.pop();
+                if (results.size() < 2) return Error{"Not enough arguments for infix operator", operators.top().second};
+                auto [op, line] = operators.top(); operators.pop();
                 Expression rhs = results.top(); results.pop();
                 Expression lhs = results.top(); results.pop();
-                results.push({"function", {{op}, lhs, rhs}});
+                results.push({"function", line, {{op}, lhs, rhs}});
             }
 
-            expect(results.size() == 1, "Infix expression does not evaluate to one value");
+            if (results.size() != 1) return Error{"Not enough arguments for infix operator", cur_line};
             cur_expression = results.top();
         }
 
         // chcek if calling is happening
-        while (!tokens.empty() && tokens.front() == "(") {
+        while (!tokens.empty() && tokens.front().first == "(") {
             exit = false;
-            cur_expression = {"function", {cur_expression}};
+            cur_expression = {"function", cur_line, {cur_expression}};
             tokens.pop();
-            while (!tokens.empty() && tokens.front() != ")") {
+            while (!tokens.empty() && tokens.front().first != ")") {
 
-                variant<string_view, Expression> child_expr_res = parseTokens(tokens, true);
-                if (holds_alternative<string_view>(child_expr_res)) return child_expr_res;
+                variant<Error, Expression> child_expr_res = parseTokens(tokens, true);
+                if (holds_alternative<Error>(child_expr_res)) return child_expr_res;
                 Expression child_expression = get<Expression>(child_expr_res);
 
                 cur_expression.children.push_back(child_expression);
 
-                if (tokens.front() == ",") {
+                if (tokens.front().first == ",") {
                     tokens.pop();
-                } else if (tokens.front() != ")") {
-                    return "Arguments to function formatted badly";
+                } else if (tokens.front().first != ")") {
+                    return Error{"Arguments to function formatted badly", cur_line};
                 }
             }
-            expect(!tokens.empty(), "Arguments to function formatted badly");
+            if (tokens.empty()) return Error{"Arguments to function formatted badly", cur_line};
             tokens.pop();
         }
     }
@@ -101,17 +101,20 @@ variant<string_view, Expression> parseTokens(queue<string> &tokens, bool infix) 
     return cur_expression;
 }
 
-queue<string> tokenize(string line) {
+queue<pair<string, int>> tokenize(string line) {
+    int start = 0;
     string token = "";
-    queue<string> tokens;
+    queue<pair<string, int>> tokens;
     for (int i = 0; i < line.length(); i++) {
         if (line[i] == ' ') {
+            start++;
             continue;
         }
 
         if (special_tokens.find(line[i]) != special_tokens.end()) {
-            if (token.size() != 0) tokens.push(token);
-            tokens.push(string() + line[i]);
+            if (token.size() != 0) tokens.push({token, start});
+            tokens.push({string() + line[i], i});
+            start = i + 1;
             token = "";
         }
         else {
@@ -119,13 +122,13 @@ queue<string> tokenize(string line) {
         }
     }
     if (token.size() != 0) {
-        tokens.push(token);
+        tokens.push({token, start});
     }
 
     return tokens;
 }
 
-variant<string_view, Expression> parseString(string s) {
-    queue<string> tokens = tokenize(s);
+variant<Error, Expression> parseString(string s) {
+    queue<pair<string, int>> tokens = tokenize(s);
     return parseTokens(tokens, true);
 }

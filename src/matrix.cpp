@@ -71,7 +71,7 @@ vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
 }
 
 // similar to rref algorithm
-variant<string_view, Fraction> determinant(const vector<vector<Fraction>> &original) {
+variant<Error, Fraction> determinant(const vector<vector<Fraction>> &original) {
     if (original.size() == 0) {
         return Fraction{0, 1, 1};
     }
@@ -155,7 +155,7 @@ variant<string_view, Fraction> determinant(const vector<vector<Fraction>> &origi
 
 
 // similar to rref algorithm
-variant<string_view, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> &original) {
+variant<Error, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> &original) {
     vector<vector<Fraction>> matrix = original;
     if (matrix.size() == 0) {
         return matrix;
@@ -245,15 +245,27 @@ variant<string_view, vector<vector<Fraction>>> inverse(const vector<vector<Fract
     // check that the matrix is identity
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix.size(); j++) {
-            if (matrix[i][j].numerator != 0 && i != j) return "Cannot take inverse of matrix with linearly dependent columns";
-            if (matrix[i][j].numerator == 0 && i == j) return "Cannot take inverse of matrix with linearly dependent columns";
+            expect(
+                (
+                    (i == j && matrix[i][j].numerator == 1 && matrix[i][j].denominator == 1) ||
+                    (i != j && matrix[i][j].numerator == 0)
+                ),
+                "Matrix has non-linearly independent columns"
+            );
         }
     }
     return inverse;
 }
 
+Fraction norm_sq(vector<vector<Fraction>> const &matrix) {
+    Fraction sum = {0, 1, 1};
+    for (int i = 0; i < matrix.size(); i++) {
+        sum = add_frac(sum, dot(matrix[i], matrix[i]));
+    }
+    return sum;
+}
 
-variant<string_view, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {
+variant<Error, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix) {
     if (matrix.size() == 0) {
         return vector<vector<Fraction>>();
     }
@@ -264,9 +276,7 @@ variant<string_view, vector<vector<Fraction>>> orthonormalize_rows(vector<vector
             vector<Fraction> proj = mul_vector(dot(matrix[i], output[j]), output[j]);
             output[i] = sub_vectors(output[i], proj);
         }
-        if (dot(output[i], output[i]).numerator == 0) {
-            return "The vectors to be orthonormalized are not linearly independent";
-        }
+        expect(dot(output[i], output[i]).numerator != 0, "The vectors to be orthonormalized are not linearly independent");
         output[i] = normalize(output[i]);
     }
     return output;
@@ -285,7 +295,7 @@ vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix) {
     return t;
 }
 
-variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
+variant<Error, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
     expect(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size(), "Matrix multiplication dimensions invalid");
     vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
     for (int i = 0; i < matrix1.size(); i++) {
@@ -300,7 +310,7 @@ variant<string_view, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> 
     return output;
 }
 
-variant<string_view, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
+variant<Error, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
     expect(matrix1.size() == matrix2.size() && (matrix1.size() == 0 || matrix1[0].size() == matrix2[0].size()), "Cannot add matrices");
     int rows = matrix1.size();
     int cols = matrix1.size() > 0 ? matrix1[0].size() : 0;
@@ -322,7 +332,7 @@ vector<vector<Fraction>> matrix_scale(Fraction f, vector<vector<Fraction>> const
     return matrix;
 }
 
-variant<string_view, vector<vector<Fraction>>> get_matrix() {
+variant<Error, vector<vector<Fraction>>> get_matrix() {
     int rows, cols; cin >> rows >> cols;
     expect(rows > 0 && cols > 0, "Matrix needs positive rows and columns");
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));

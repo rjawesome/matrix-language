@@ -21,7 +21,9 @@ DataContainer duplicate(DataContainer value) {
     return value;
 }
 
-variant<string_view, DataContainer> evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
+variant<Error, DataContainer> evaluate(Expression const &e, map<string, DataContainer> &global_frame) {
+    int prev_operating_line = operating_line;
+    operating_line = e.line;
     if (e.children.size() > 0) {
         if (e.children[0].name == "=") {
             expect(e.children.size() == 3, "Wrong amount of operands for equals");
@@ -29,8 +31,8 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
             expect(e.children[1].name.length() > 0 && banned_var_starts.find(e.children[0].name[0]) == banned_var_starts.end(), "Bad variable name");
             string name = e.children[1].name;
 
-            variant<string_view, DataContainer> value = evaluate(e.children[2], global_frame);
-            if (holds_alternative<string_view>(value)) {
+            variant<Error, DataContainer> value = evaluate(e.children[2], global_frame);
+            if (holds_alternative<Error>(value)) {
                 return value;
             }
 
@@ -42,10 +44,12 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
 
             DataContainer dupl_value = duplicate(get<DataContainer>(value));
             global_frame[name] = dupl_value;
+            
+            operating_line = prev_operating_line;
             return dupl_value;
         } else {
-            variant<string_view, DataContainer> func_data_res = evaluate(e.children[0], global_frame);
-            if (holds_alternative<string_view>(func_data_res)) {
+            variant<Error, DataContainer> func_data_res = evaluate(e.children[0], global_frame);
+            if (holds_alternative<Error>(func_data_res)) {
                 return func_data_res;
             }
             DataContainer func_data = get<DataContainer>(func_data_res);
@@ -56,16 +60,16 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
 
             DataContainer args[f.arglen];
             int evaluated_args = 0;
-            variant<string_view, DataContainer> ret;
+            variant<Error, DataContainer> ret;
             for (int i = 0; i < f.arglen; i++) {
-                variant<string_view, DataContainer> arg_res = evaluate(e.children[i+1], global_frame);
-                if (holds_alternative<string_view>(arg_res)) {
+                variant<Error, DataContainer> arg_res = evaluate(e.children[i+1], global_frame);
+                if (holds_alternative<Error>(arg_res)) {
                     ret = arg_res;
                     break;
                 }
                 DataContainer arg = get<DataContainer>(arg_res);
                 if (arg.type != f.args[i] && f.args[i] != TYPE_ANY) {
-                    ret = "Function argument with invalid type";
+                    ret = Error{"Function argument with invalid type", e.children[i+1].line};
                     break;
                 }
 
@@ -81,14 +85,20 @@ variant<string_view, DataContainer> evaluate(Expression const &e, map<string, Da
                     delete arg.ptr;
                 }
             }
+
+            operating_line = prev_operating_line;
             return ret;
        }
     } else if (e.name.length() > 0 && frac_start.find(e.name[0]) != frac_start.end()) {
         DataContainer c = {TYPE_FRACTION};
         load_frac(e.name, c.frac);
+
+        operating_line = prev_operating_line;
         return c;
     } else {
         expect(global_frame.find(e.name) != global_frame.end(), "Variable is not defined");
+
+        operating_line = prev_operating_line;
         return global_frame[e.name];
     }
 }
@@ -123,14 +133,22 @@ void process_expressions() {
     while (true) {
         cout << ">> ";
         getline(cin, line);
-        variant<string_view, Expression> parse_result = parseString(line);
-        if (holds_alternative<string_view>(parse_result)) {
-            cout << get<string_view>(parse_result) << endl;
+        variant<Error, Expression> parse_result = parseString(line);
+        if (holds_alternative<Error>(parse_result)) {
+            auto [msg, line_num] = get<Error>(parse_result);
+            cout << line << endl;
+            for (int i = 0; i < line_num; i++) cout << " ";
+            cout << "^" << endl;
+            cout << get<Error>(parse_result).message << endl;
             continue;
         }
-        variant<string_view, DataContainer> result = evaluate(get<Expression>(parse_result), base_global_frame);
-        if (holds_alternative<string_view>(result)) {
-            cout << get<string_view>(result) << endl;
+        variant<Error, DataContainer> result = evaluate(get<Expression>(parse_result), base_global_frame);
+        if (holds_alternative<Error>(result)) {
+            auto [msg, line_num] = get<Error>(result);
+            cout << line << endl;
+            for (int i = 0; i < line_num; i++) cout << " ";
+            cout << "^" << endl;
+            cout << get<Error>(result).message << endl;
             continue;
         }
         DataContainer data = get<DataContainer>(result);

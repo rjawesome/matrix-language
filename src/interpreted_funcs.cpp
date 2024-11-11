@@ -1,55 +1,55 @@
 #include "interpreted_funcs.h"
 
-variant<string_view, DataContainer> get_matrix(DataContainer args[]) {
-    variant<string_view, vector<vector<Fraction>>> matrix = get_matrix();
-    return holds_alternative<string_view>(matrix) ? 
-        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+variant<Error, DataContainer> get_matrix(DataContainer args[]) {
+    variant<Error, vector<vector<Fraction>>> matrix = get_matrix();
+    return holds_alternative<Error>(matrix) ? 
+        variant<Error, DataContainer>(get<Error>(matrix)) :
         DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
-variant<string_view, DataContainer> rref(DataContainer args[]) {
+variant<Error, DataContainer> rref(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    variant<string_view, vector<vector<Fraction>>> matrix = rref(input);
-    return holds_alternative<string_view>(matrix) ? 
-        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+    variant<Error, vector<vector<Fraction>>> matrix = rref(input);
+    return holds_alternative<Error>(matrix) ? 
+        variant<Error, DataContainer>(get<Error>(matrix)) :
         DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
-variant<string_view, DataContainer> solve_equations(DataContainer args[]) {
+variant<Error, DataContainer> solve_equations(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
     solve_equations(input);
     return DataContainer{TYPE_NONE, true};
 }
 
-variant<string_view, DataContainer> orthonormalize(DataContainer args[]) {
+variant<Error, DataContainer> orthonormalize(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    variant<string_view, vector<vector<Fraction>>> matrix = orthonormalize_rows(transpose(input));
+    variant<Error, vector<vector<Fraction>>> matrix = orthonormalize_rows(transpose(input));
     if (holds_alternative<vector<vector<Fraction>>>(matrix)) matrix = transpose(get<vector<vector<Fraction>>>(matrix));
-    return holds_alternative<string_view>(matrix) ? 
-        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+    return holds_alternative<Error>(matrix) ? 
+        variant<Error, DataContainer>(get<Error>(matrix)) :
         DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
-variant<string_view, DataContainer> inverse(DataContainer args[]) {
+variant<Error, DataContainer> inverse(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    variant<string_view, vector<vector<Fraction>>> matrix = inverse(input);
-    return holds_alternative<string_view>(matrix) ? 
-        variant<string_view, DataContainer>(get<string_view>(matrix)) :
+    variant<Error, vector<vector<Fraction>>> matrix = inverse(input);
+    return holds_alternative<Error>(matrix) ? 
+        variant<Error, DataContainer>(get<Error>(matrix)) :
         DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
 }
 
-variant<string_view, DataContainer> determinant(DataContainer args[]) {
+variant<Error, DataContainer> determinant(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    variant<string_view, Fraction> determ = determinant(input);
-    return holds_alternative<string_view>(determ) ? 
-        variant<string_view, DataContainer>(get<string_view>(determ)) :
+    variant<Error, Fraction> determ = determinant(input);
+    return holds_alternative<Error>(determ) ? 
+        variant<Error, DataContainer>(get<Error>(determ)) :
         DataContainer{TYPE_FRACTION, true, .frac = get<Fraction>(determ)};
 }
 
-variant<string_view, DataContainer> qr(DataContainer args[]) {
+variant<Error, DataContainer> qr(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    variant<string_view, vector<vector<Fraction>>> qT_res = orthonormalize_rows(transpose(input));
-    if (holds_alternative<string_view>(qT_res)) return get<string_view>(qT_res);
+    variant<Error, vector<vector<Fraction>>> qT_res = orthonormalize_rows(transpose(input));
+    if (holds_alternative<Error>(qT_res)) return get<Error>(qT_res);
     auto qT = get<vector<vector<Fraction>>>(qT_res);
     vector<vector<Fraction>> Q = transpose(qT);
     vector<vector<Fraction>> R = get<vector<vector<Fraction>>>(mat_mul(qT, input));
@@ -57,31 +57,31 @@ variant<string_view, DataContainer> qr(DataContainer args[]) {
     return DataContainer{TYPE_MATRIX, true, .ptr = matrix};
 }
 
-variant<string_view, DataContainer> add(DataContainer args[]) {
+variant<Error, DataContainer> add(DataContainer args[]) {
     if (args[0].type == TYPE_FRACTION && args[1].type == TYPE_FRACTION) {
         return DataContainer{TYPE_FRACTION, true, .frac = add_frac(args[0].frac, args[1].frac)};
     }
     if (args[0].type == TYPE_MATRIX && args[1].type == TYPE_MATRIX) {
         vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
         vector<vector<Fraction>> matrix2 = *(vector<vector<Fraction>>*)(args[1].ptr);
-        variant<string_view, vector<vector<Fraction>>> matrix = add_matrix(matrix1, matrix2);
-        return holds_alternative<string_view>(matrix) ? 
-            variant<string_view, DataContainer>(get<string_view>(matrix)) :
+        variant<Error, vector<vector<Fraction>>> matrix = add_matrix(matrix1, matrix2);
+        return holds_alternative<Error>(matrix) ? 
+            variant<Error, DataContainer>(get<Error>(matrix)) :
             DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
     }
-    return "Addition between types not supported";
+    expect(false, "Addition between types not supported");
 }
 
-variant<string_view, DataContainer> mult(DataContainer args[]) {
+variant<Error, DataContainer> mult(DataContainer args[]) {
     if (args[0].type == TYPE_FRACTION && args[1].type == TYPE_FRACTION) {
         return DataContainer{TYPE_FRACTION, true, .frac = mul_frac(args[0].frac, args[1].frac)};
     }
     if (args[0].type == TYPE_MATRIX && args[1].type == TYPE_MATRIX) {
         vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
         vector<vector<Fraction>> matrix2 = *(vector<vector<Fraction>>*)(args[1].ptr);
-        variant<string_view, vector<vector<Fraction>>> matrix = mat_mul(matrix1, matrix2);
-        return holds_alternative<string_view>(matrix) ? 
-            variant<string_view, DataContainer>(get<string_view>(matrix)) :
+        variant<Error, vector<vector<Fraction>>> matrix = mat_mul(matrix1, matrix2);
+        return holds_alternative<Error>(matrix) ? 
+            variant<Error, DataContainer>(get<Error>(matrix)) :
             DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
     }
     if (args[0].type == TYPE_MATRIX && args[1].type == TYPE_FRACTION) {
@@ -93,22 +93,27 @@ variant<string_view, DataContainer> mult(DataContainer args[]) {
         vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[1].ptr);
         return DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(matrix_scale(args[0].frac, matrix1))) };
     }
-    return "Multiplication between types not supported";
+    expect(false, "Multiplication between types not supported");
 }
 
-variant<string_view, DataContainer> transpose(DataContainer args[]) {
+variant<Error, DataContainer> transpose(DataContainer args[]) {
     vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
     return DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(transpose(matrix1)))};
 }
 
-variant<string_view, DataContainer> rows(DataContainer args[]) {
+variant<Error, DataContainer> rows(DataContainer args[]) {
     vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
     return DataContainer{TYPE_FRACTION, true, .frac = {(int)matrix1.size(), 1, 1}};
 }
 
-variant<string_view, DataContainer> cols(DataContainer args[]) {
+variant<Error, DataContainer> cols(DataContainer args[]) {
     vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
     return DataContainer{TYPE_FRACTION, true, .frac = {(int)(matrix1.size() > 0 ? matrix1[0].size(): 0), 1, 1}};
+}
+
+variant<Error, DataContainer> norm_sq(DataContainer args[]) {
+    vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
+    return DataContainer{TYPE_FRACTION, true, .frac = norm_sq(matrix1)};
 }
 
 map<string, DataContainer> base_global_frame = {
@@ -122,6 +127,7 @@ map<string, DataContainer> base_global_frame = {
     {"transpose", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, transpose }}},
     {"inverse", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, inverse }}},
     {"determinant", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, determinant }}},
+    {"norm_sq", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, norm_sq }}},
     {"+", {TYPE_FUNCTION, false, .function = {2, {TYPE_ANY, TYPE_ANY}, TYPE_ANY, add }}},
     {"*", {TYPE_FUNCTION, false, .function = {2, {TYPE_ANY, TYPE_ANY}, TYPE_ANY, mult }}}
 };

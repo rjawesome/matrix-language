@@ -7,6 +7,7 @@
 
 struct Expression {
     string name;
+    int line;
     vector<Expression> children;
 };
 
@@ -25,7 +26,7 @@ struct Function {
     int arglen;
     DataType args[10];
     DataType returnType;
-    variant<string_view, DataContainer> (*func)(DataContainer[]);
+    variant<Error, DataContainer> (*func)(DataContainer[]);
 };
 
 struct DataContainer {

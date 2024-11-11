@@ -1,5 +1,7 @@
 #include "utils.h"
 
+int operating_line = 0;
+
 int gcd(int a, int b) {
     a = abs(a);
     b = abs(b);
