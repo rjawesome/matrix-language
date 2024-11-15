@@ -12,6 +12,8 @@ struct Fraction {
     int sqrt; // multiples to numerator
 };
 
+struct Error; // defined in utils.h
+
 void print_frac(Fraction const &m);
 Error load_frac(string s, Fraction &m);
 Fraction mul_frac(Fraction a, Fraction b);

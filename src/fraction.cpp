@@ -65,4 +65,5 @@ Error load_frac(string s, Fraction &m) {
     m.numerator /= div;
     m.denominator /= div;
     m.sqrt = 1;
+    return {"", 0};
 }
