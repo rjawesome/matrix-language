@@ -13,7 +13,7 @@ struct Fraction {
 };
 
 void print_frac(Fraction const &m);
-void load_frac(string s, Fraction &m);
+Error load_frac(string s, Fraction &m);
 Fraction mul_frac(Fraction a, Fraction b);
 Fraction add_frac(Fraction a, Fraction b);
 Fraction negate_frac(Fraction a);

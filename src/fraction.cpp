@@ -52,7 +52,7 @@ void print_frac(Fraction const &m) {
     }
 }
 
-void load_frac(string s, Fraction &m) {
+Error load_frac(string s, Fraction &m) {
     if (s.find("/") == string::npos) {
         m.denominator = 1;
         m.numerator = stoi(s);
@@ -60,6 +60,7 @@ void load_frac(string s, Fraction &m) {
         m.numerator = stoi(s.substr(0, s.find("/")));
         m.denominator = stoi(s.substr(s.find("/") + 1));
     }
+    expect(m.denominator != 0, "Cannot have a zero denominator");
     int div = gcd(m.numerator, m.denominator);
     m.numerator /= div;
     m.denominator /= div;

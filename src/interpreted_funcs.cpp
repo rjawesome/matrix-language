@@ -31,11 +31,18 @@ variant<Error, DataContainer> orthonormalize(DataContainer args[]) {
 }
 
 variant<Error, DataContainer> inverse(DataContainer args[]) {
-    vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    variant<Error, vector<vector<Fraction>>> matrix = inverse(input);
-    return holds_alternative<Error>(matrix) ? 
-        variant<Error, DataContainer>(get<Error>(matrix)) :
-        DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
+    if (args[0].type == TYPE_MATRIX) {
+        vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
+        variant<Error, vector<vector<Fraction>>> matrix = inverse(input);
+        return holds_alternative<Error>(matrix) ? 
+            variant<Error, DataContainer>(get<Error>(matrix)) :
+            DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
+    }
+    if (args[0].type == TYPE_FRACTION) {
+        expect(args[0].frac.numerator != 0, "Cannot invert zero");
+        return DataContainer{TYPE_FRACTION, true, .frac = inverse_frac(args[0].frac)};
+    }
+    expect(false, "Inverse not supported for this type");
 }
 
 variant<Error, DataContainer> determinant(DataContainer args[]) {
@@ -125,7 +132,7 @@ map<string, DataContainer> base_global_frame = {
     {"rows", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, rows }}},
     {"cols", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, cols }}},
     {"transpose", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, transpose }}},
-    {"inverse", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, inverse }}},
+    {"inverse", {TYPE_FUNCTION, false, .function = {1, {TYPE_ANY}, TYPE_ANY, inverse }}},
     {"determinant", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, determinant }}},
     {"norm_sq", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_FRACTION, norm_sq }}},
     {"+", {TYPE_FUNCTION, false, .function = {2, {TYPE_ANY, TYPE_ANY}, TYPE_ANY, add }}},

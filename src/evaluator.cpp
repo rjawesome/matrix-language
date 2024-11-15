@@ -91,7 +91,8 @@ variant<Error, DataContainer> evaluate(Expression const &e, map<string, DataCont
        }
     } else if (e.name.length() > 0 && frac_start.find(e.name[0]) != frac_start.end()) {
         DataContainer c = {TYPE_FRACTION};
-        load_frac(e.name, c.frac);
+        Error err = load_frac(e.name, c.frac);
+        if (err.message.length() > 0) return err;
 
         operating_line = prev_operating_line;
         return c;
