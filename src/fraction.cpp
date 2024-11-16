@@ -55,15 +55,36 @@ void print_frac(Fraction const &m) {
 Error load_frac(string s, Fraction &m) {
     if (s.find("/") == string::npos) {
         m.denominator = 1;
-        m.numerator = stoi(s);
+        if (s.find("√") != string::npos) {
+            m.sqrt = stoi(s.substr(s.find("√") + 3));
+            string num = s.substr(0, s.find("√"));
+            if (num.length() == 0) m.numerator = 1;
+            else if (num.length() == 1 && num[0] == '-') m.numerator = -1;
+            else m.numerator = stoi(num);
+        } else {
+            m.sqrt = 1;
+            m.numerator = stoi(s);
+        }
     } else {
-        m.numerator = stoi(s.substr(0, s.find("/")));
+        string top = s.substr(0, s.find("/"));
+        if (top.find("√") != string::npos) {
+            m.sqrt = stoi(top.substr(top.find("√") + 3));
+            string num = top.substr(0, top.find("√"));
+            if (num.length() == 0) m.numerator = 1;
+            else if (num.length() == 1 && num[0] == '-') m.numerator = -1;
+            else m.numerator = stoi(num);
+        } else {
+            m.sqrt = 1;
+            m.numerator = stoi(top);
+        }
         m.denominator = stoi(s.substr(s.find("/") + 1));
     }
     expect(m.denominator != 0, "Cannot have a zero denominator");
+    auto [whole, sq] = reduce_sqrt(m.sqrt);
+    m.sqrt = sq;
+    m.numerator *= whole;
     int div = gcd(m.numerator, m.denominator);
     m.numerator /= div;
     m.denominator /= div;
-    m.sqrt = 1;
     return {"", 0};
 }

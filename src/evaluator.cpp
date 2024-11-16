@@ -1,7 +1,7 @@
 #include "evaluator.h"
 
 set<char> banned_var_starts{'1','2','3','4','5','6','7','8','9','0','/','-'};
-set<char> frac_start{'-','1','2','3','4','5','6','7','8','9'};
+set<char> frac_start{'-','1','2','3','4','5','6','7','8','9',"√"[0]};
 
 inline bool is_ptr(DataType t) {
     return t == TYPE_MATRIX || t == TYPE_VECTOR;
@@ -133,6 +133,14 @@ void process_expressions() {
     string line;
     while (true) {
         cout << ">> ";
+
+        // clear the whole cin buffer
+        cin.clear();
+        streamsize chars_in_buffer = cin.rdbuf()->in_avail(); // Check how many chars are in the buffer
+        if (chars_in_buffer > 0) {
+            cin.ignore(chars_in_buffer);
+        }
+
         getline(cin, line);
         variant<Error, Expression> parse_result = parseString(line);
         if (holds_alternative<Error>(parse_result)) {
