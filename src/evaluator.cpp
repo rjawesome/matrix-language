@@ -142,6 +142,9 @@ void process_expressions() {
         }
 
         getline(cin, line);
+
+        if (line.find("quit()") != string::npos) break;
+
         variant<Error, Expression> parse_result = parseString(line);
         if (holds_alternative<Error>(parse_result)) {
             auto [msg, line_num] = get<Error>(parse_result);
