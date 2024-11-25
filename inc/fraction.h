@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "utils.h"
-#include <cassert>
+#include <variant>
 using namespace std;
 
 struct Fraction {
@@ -17,7 +17,7 @@ struct Error; // defined in utils.h
 void print_frac(Fraction const &m);
 Error load_frac(string s, Fraction &m);
 Fraction mul_frac(Fraction a, Fraction b);
-Fraction add_frac(Fraction a, Fraction b);
+variant<Error, Fraction> add_frac(Fraction a, Fraction b);
 Fraction negate_frac(Fraction a);
 Fraction inverse_frac(Fraction a);
 Fraction sqrt_frac(Fraction a);

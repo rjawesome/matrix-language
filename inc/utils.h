@@ -1,7 +1,8 @@
 #ifndef UTILS
 #define UTILS
 
-#define expect(x, y) do { if (!(x)) return Error{y,operating_line}; } while (false);
+#define expect(x, y) do { if (!(x)) return Error{y,operating_line}; } while (false)
+#define unwrap(t, x, y) do { auto temp = y; if (holds_alternative<Error>(temp)) {return get<Error>(temp);} else { x = get<t>(temp); } } while (false)
 
 #include "fraction.h"
 #include "math.h"

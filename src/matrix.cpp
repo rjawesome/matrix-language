@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
+variant<Error, vector<vector<Fraction>>> rref(const vector<vector<Fraction>> &original) {
     vector<vector<Fraction>> matrix = original;
     if (matrix.size() == 0) {
         return vector<vector<Fraction>>();
@@ -27,7 +27,7 @@ vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
             if (matrix[j][i].numerator != 0) {
                 Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
                 for (int k = 0; k < cols; k++) {
-                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                    unwrap(Fraction, matrix[j][k], add_frac(matrix[j][k], mul_frac(matrix[i][k], mul)));
                 }
             }
         }
@@ -62,7 +62,7 @@ vector<vector<Fraction>> rref(const vector<vector<Fraction>> &original) {
             if (matrix[j][i].numerator != 0) {
                 Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
                 for (int k = 0; k < cols; k++) {
-                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                    unwrap(Fraction, matrix[j][k], add_frac(matrix[j][k], mul_frac(matrix[i][k], mul)));
                 }
             }
         }
@@ -101,7 +101,7 @@ variant<Error, Fraction> determinant(const vector<vector<Fraction>> &original) {
             if (matrix[j][i].numerator != 0) {
                 Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
                 for (int k = 0; k < cols; k++) {
-                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                    unwrap(Fraction, matrix[j][k], add_frac(matrix[j][k], mul_frac(matrix[i][k], mul)));
                 }
             }
         }
@@ -138,7 +138,7 @@ variant<Error, Fraction> determinant(const vector<vector<Fraction>> &original) {
             if (matrix[j][i].numerator != 0) {
                 Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
                 for (int k = 0; k < cols; k++) {
-                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
+                    unwrap(Fraction, matrix[j][k], add_frac(matrix[j][k], mul_frac(matrix[i][k], mul)));
                 }
             }
         }
@@ -195,8 +195,8 @@ variant<Error, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> 
             if (matrix[j][i].numerator != 0) {
                 Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
                 for (int k = 0; k < cols; k++) {
-                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
-                    inverse[j][k] = add_frac(inverse[j][k], mul_frac(inverse[i][k], mul));
+                    unwrap(Fraction, matrix[j][k], add_frac(matrix[j][k], mul_frac(matrix[i][k], mul)));
+                    unwrap(Fraction, inverse[j][k], add_frac(inverse[j][k], mul_frac(inverse[i][k], mul)));
                 }
             }
         }
@@ -236,8 +236,8 @@ variant<Error, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> 
             if (matrix[j][i].numerator != 0) {
                 Fraction mul = negate_frac(mul_frac(matrix[j][i], inverse_frac(matrix[i][i])));
                 for (int k = 0; k < cols; k++) {
-                    matrix[j][k] = add_frac(matrix[j][k], mul_frac(matrix[i][k], mul));
-                    inverse[j][k] = add_frac(inverse[j][k], mul_frac(inverse[i][k], mul));
+                    unwrap(Fraction, matrix[j][k], add_frac(matrix[j][k], mul_frac(matrix[i][k], mul)));
+                    unwrap(Fraction, inverse[j][k], add_frac(inverse[j][k], mul_frac(inverse[i][k], mul)));
                 }
             }
         }
@@ -260,7 +260,8 @@ variant<Error, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> 
 Fraction norm_sq(vector<vector<Fraction>> const &matrix) {
     Fraction sum = {0, 1, 1};
     for (int i = 0; i < matrix.size(); i++) {
-        sum = add_frac(sum, dot(matrix[i], matrix[i]));
+        // dot product removes any square roots
+        sum = get<Fraction>(add_frac(sum, get<Fraction>(dot(matrix[i], matrix[i]))));
     }
     return sum;
 }
@@ -273,10 +274,12 @@ variant<Error, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fract
     for (int i = 0; i < matrix.size(); i++) {
         output[i] = matrix[i];
         for (int j = i-1; j >= 0; j--) {
-            vector<Fraction> proj = mul_vector(dot(matrix[i], output[j]), output[j]);
-            output[i] = sub_vectors(output[i], proj);
+            Fraction dotp;
+            unwrap(Fraction, dotp, dot(matrix[i], output[j]));
+            vector<Fraction> proj = mul_vector(dotp, output[j]);
+            unwrap(vector<Fraction>, output[i], sub_vectors(output[i], proj));
         }
-        expect(dot(output[i], output[i]).numerator != 0, "The vectors to be orthonormalized are not linearly independent");
+        expect(get<Fraction>(dot(output[i], output[i])).numerator != 0, "The vectors to be orthonormalized are not linearly independent");
         output[i] = normalize(output[i]);
     }
     return output;
@@ -302,7 +305,7 @@ variant<Error, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const 
         for (int j = 0; j < matrix2[0].size(); j++) {
             Fraction sum = {0, 1, 1};
             for (int k = 0; k < matrix2.size(); k++) {
-                sum = add_frac(sum, mul_frac(matrix1[i][k], matrix2[k][j]));
+                unwrap(Fraction, sum, add_frac(sum, mul_frac(matrix1[i][k], matrix2[k][j])));
             }
             output[i][j] = sum;
         }
@@ -317,7 +320,7 @@ variant<Error, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> con
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            matrix[i][j] = add_frac(matrix1[i][j], matrix2[i][j]);
+            unwrap(Fraction, matrix[i][j], add_frac(matrix1[i][j], matrix2[i][j]));
         }
     }
     return matrix;
@@ -332,8 +335,7 @@ vector<vector<Fraction>> matrix_scale(Fraction f, vector<vector<Fraction>> const
     return matrix;
 }
 
-variant<Error, vector<vector<Fraction>>> get_matrix() {
-    int rows, cols; cin >> rows >> cols;
+variant<Error, vector<vector<Fraction>>> get_matrix(int rows, int cols) {
     expect(rows > 0 && cols > 0, "Matrix needs positive rows and columns");
     vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
     for (int i = 0; i < rows; i++) {

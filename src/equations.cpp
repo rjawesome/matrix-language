@@ -25,7 +25,7 @@ void multiple_solutions(vector<vector<Fraction>>& matrix, int variables) {
     for (int i = 0; i < variables; i++) {
         if (i >= rows || matrix[i][i].numerator == 0) {
             vector<Fraction> solution(variables);
-            solution[i] = {1, 1}; // each free variable contains itself
+            solution[i] = {1, 1, 1}; // each free variable contains itself
             solutions[i] = solution;
         }
     }
@@ -55,8 +55,9 @@ void multiple_solutions(vector<vector<Fraction>>& matrix, int variables) {
     print_vector(offset);
 }
 
-void solve_equations (const vector<vector<Fraction>>& original) {
-    vector<vector<Fraction>> matrix = rref(original);
+Error solve_equations (const vector<vector<Fraction>>& original) {
+    vector<vector<Fraction>> matrix;
+    unwrap(vector<vector<Fraction>>, matrix, rref(original));
 
     int rows = matrix.size();
     int cols = matrix[0].size();
@@ -74,7 +75,7 @@ void solve_equations (const vector<vector<Fraction>>& original) {
         else if (matrix[i][cols-1].numerator != 0) {
             // invalid equation
             no_solutions();
-            return;
+            return {"", 0};
         }
     }
 
@@ -92,5 +93,5 @@ void solve_equations (const vector<vector<Fraction>>& original) {
         multiple_solutions(matrix, cols - 1);
     }
 
-    return;
+    return {"", 0};
 }

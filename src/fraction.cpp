@@ -9,12 +9,12 @@ Fraction mul_frac(Fraction a, Fraction b) {
     return { new_num / div, new_dem / div, sq };
 }
 
-Fraction add_frac(Fraction a, Fraction b) {
-    assert(a.sqrt == b.sqrt || a.numerator == 0 || b.numerator == 0);
+variant<Error, Fraction> add_frac(Fraction a, Fraction b) {
+    expect(a.sqrt == b.sqrt || a.numerator == 0 || b.numerator == 0, "Addition between fractions with different square roots is not supported");
     int common_denom = a.denominator * b.denominator / gcd(a.denominator, b.denominator);
     int new_num = a.numerator * (common_denom/a.denominator) + b.numerator * (common_denom/b.denominator);
     int div = gcd(new_num, common_denom);
-    return {new_num / div, common_denom / div, a.numerator == 0 ? b.sqrt : a.sqrt };
+    return Fraction{new_num / div, common_denom / div, a.numerator == 0 ? b.sqrt : a.sqrt };
 }
 
 Fraction negate_frac(Fraction a) {

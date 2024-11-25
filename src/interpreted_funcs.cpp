@@ -1,7 +1,8 @@
 #include "interpreted_funcs.h"
 
 variant<Error, DataContainer> get_matrix(DataContainer args[]) {
-    variant<Error, vector<vector<Fraction>>> matrix = get_matrix();
+    expect(args[0].frac.denominator == 1 && args[1].frac.denominator == 1 && args[0].frac.sqrt == 1 && args[1].frac.sqrt == 1 && args[0].frac.numerator > 0 && args[1].frac.numerator > 0, "Matrix dimensions must be a positive integer");
+    variant<Error, vector<vector<Fraction>>> matrix = get_matrix(args[0].frac.numerator, args[1].frac.numerator);
     return holds_alternative<Error>(matrix) ? 
         variant<Error, DataContainer>(get<Error>(matrix)) :
         DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};
@@ -17,7 +18,8 @@ variant<Error, DataContainer> rref(DataContainer args[]) {
 
 variant<Error, DataContainer> solve_equations(DataContainer args[]) {
     vector<vector<Fraction>> input = *(vector<vector<Fraction>>*)(args[0].ptr);
-    solve_equations(input);
+    Error err = solve_equations(input);
+    if (err.message.size() > 0) return err;
     return DataContainer{TYPE_NONE, true};
 }
 
@@ -66,7 +68,10 @@ variant<Error, DataContainer> qr(DataContainer args[]) {
 
 variant<Error, DataContainer> add(DataContainer args[]) {
     if (args[0].type == TYPE_FRACTION && args[1].type == TYPE_FRACTION) {
-        return DataContainer{TYPE_FRACTION, true, .frac = add_frac(args[0].frac, args[1].frac)};
+        variant<Error, Fraction> sum = add_frac(args[0].frac, args[1].frac);
+        return holds_alternative<Error>(sum) ? 
+            variant<Error, DataContainer>(get<Error>(sum)) : 
+            DataContainer{TYPE_FRACTION, true, .frac = get<Fraction>(sum)};
     }
     if (args[0].type == TYPE_MATRIX && args[1].type == TYPE_MATRIX) {
         vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
@@ -124,7 +129,7 @@ variant<Error, DataContainer> norm_sq(DataContainer args[]) {
 }
 
 map<string, DataContainer> base_global_frame = {
-    {"get_matrix", {TYPE_FUNCTION, false, .function = {0, {}, TYPE_MATRIX, get_matrix} }},
+    {"get_matrix", {TYPE_FUNCTION, false, .function = {2, {TYPE_FRACTION, TYPE_FRACTION}, TYPE_MATRIX, get_matrix} }},
     {"rref", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, rref }}},
     {"solve_equations", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_NONE, solve_equations }}},
     {"ortho", {TYPE_FUNCTION, false, .function = {1, {TYPE_MATRIX}, TYPE_MATRIX, orthonormalize }}},
