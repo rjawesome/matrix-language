@@ -45,7 +45,7 @@ void print_frac(Fraction const &m) {
         cout << m.numerator;
     }
     if (m.sqrt != 1 && m.numerator != 0) {
-        cout << "√" << m.sqrt;
+        cout << SQRT_CH << m.sqrt;
     }
     if (m.denominator != 1 && m.numerator != 0) {
         cout << "/" << m.denominator;
@@ -55,9 +55,9 @@ void print_frac(Fraction const &m) {
 Error load_frac(string s, Fraction &m) {
     if (s.find("/") == string::npos) {
         m.denominator = 1;
-        if (s.find("√") != string::npos) {
-            m.sqrt = stoi(s.substr(s.find("√") + 3));
-            string num = s.substr(0, s.find("√"));
+        if (s.find(SQRT_CH) != string::npos) {
+            m.sqrt = stoi(s.substr(s.find(SQRT_CH) + SQRT_LEN));
+            string num = s.substr(0, s.find(SQRT_CH));
             if (num.length() == 0) m.numerator = 1;
             else if (num.length() == 1 && num[0] == '-') m.numerator = -1;
             else m.numerator = stoi(num);
@@ -67,9 +67,9 @@ Error load_frac(string s, Fraction &m) {
         }
     } else {
         string top = s.substr(0, s.find("/"));
-        if (top.find("√") != string::npos) {
-            m.sqrt = stoi(top.substr(top.find("√") + 3));
-            string num = top.substr(0, top.find("√"));
+        if (top.find(SQRT_CH) != string::npos) {
+            m.sqrt = stoi(top.substr(top.find(SQRT_CH) + SQRT_LEN));
+            string num = top.substr(0, top.find(SQRT_CH));
             if (num.length() == 0) m.numerator = 1;
             else if (num.length() == 1 && num[0] == '-') m.numerator = -1;
             else m.numerator = stoi(num);
