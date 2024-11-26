@@ -227,34 +227,6 @@ function_name(parameter1, parameter2, ...)
   30
   ```
 
-### `add`
-- **Description**: Adds two fractions or two matrices.
-- **Parameters**:
-  - `a` (Fraction or Matrix): The first operand.
-  - `b` (Fraction or Matrix): The second operand.
-- **Returns**: The sum of the two operands.
-- **Example**:
-  ```
-  >> a = 1/2
-  >> b = 1/3
-  >> a + b
-  5/6
-  ```
-
-### `mult`
-- **Description**: Multiplies two fractions, two matrices, or a fraction and a matrix.
-- **Parameters**:
-  - `a` (Fraction or Matrix): The first operand.
-  - `b` (Fraction or Matrix): The second operand.
-- **Returns**: The product of the two operands.
-- **Example**:
-  ```
-  >> a = 1/2
-  >> b = 1/3
-  >> a * b
-  1/6
-  ```
-
 ## Infix Operators
 - The * operator between matrices uses matrix-matrix multiplciation
 - The * operator between matrices and fractions uses scalar-matrix multiplication
