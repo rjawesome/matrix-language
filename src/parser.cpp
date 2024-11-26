@@ -37,7 +37,7 @@ variant<Error, Expression> parseTokens(queue<pair<string, int>> &tokens, bool in
     bool exit = false;
 
     // we want to keep seeing if the expression needs to be extended (either infix or call expression)
-    while (!exit) {
+    while (!exit && !tokens.empty()) {
         exit = true;
         if (infix && infix_tokens.find(tokens.front().first) != infix_tokens.end()) {
             exit = false;

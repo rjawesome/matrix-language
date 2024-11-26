@@ -115,7 +115,7 @@ function_name(parameter1, parameter2, ...)
     ```
 
 ### `orthonormalize`
-- **Description**: Orthonormalizes the rows of a matrix.
+- **Description**: Orthonormalizes the columns of a matrix using the Gram-Schmidt process.
 - **Parameters**:
   - `matrix` (Matrix): The matrix to be orthonormalized.
 - **Returns**: The orthonormalized matrix.
@@ -125,23 +125,26 @@ function_name(parameter1, parameter2, ...)
   1 2
   3 4
   >> ortho(a)
-  1 0
-  0 1
+  √10/10 3√10/10 
+  3√10/10 -1√10/10 
   ```
 
 ### `qr`
-- **Description**: Computes the QR decomposition of a matrix.
+- **Description**: Computes the QR decomposition of a matrix (The orthogonal matrix Q can be retrieved from `ortho(matrix)`).
 - **Parameters**:
   - `matrix` (Matrix): The matrix to be decomposed.
-- **Returns**: The R matrix from the QR decomposition.
+- **Returns**: The upper-triangular R matrix from the QR decomposition.
 - **Example**:
   ```
   >> a = get_matrix(2, 2)
   1 2
   3 4
   >> qr(a)
-  1 0
-  0 1
+  √10 7√10/5 
+  0 √10/5
+  >> ortho(a) * qr(a)
+  1 2
+  3 4
   ```
 
 ### `rows`
