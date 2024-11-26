@@ -2,6 +2,9 @@
 
 ## How to run
 ```
+## From download
+./matrix-lang
+## From source
 make run # compile and run
 make main # compile
 ./main.out # run compiled

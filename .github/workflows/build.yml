@@ -21,22 +21,7 @@ jobs:
 
     - name: Build for Linux
       run: make
-
-    - name: Upload Linux build artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: main-linux
-        path: main.out
-
-    - name: Build for Windows
-      run: make main-win
-
-    - name: Upload Windows build artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: main-windows
-        path: main.exe
-
+    
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -55,7 +40,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./main.out
-        asset_name: main-linux.out
+        asset_name: matrix-lang
         asset_content_type: application/octet-stream
 
     - name: Upload Windows artifact to Release
@@ -65,5 +50,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./main.exe
-        asset_name: main-windows.exe
+        asset_name: matrix-lang.exe
         asset_content_type: application/octet-stream
