@@ -5,17 +5,33 @@ int operating_line = 0;
 int gcd(int a, int b) {
     a = abs(a);
     b = abs(b);
-    if (a < b) {
-        int temp = a;
-        a = b;
-        b = temp;
+    if (!a) return b;
+    if (!b) return a;
+
+    // both numbers even
+    int k = 0;
+    while (!(a & 1) && !(b & 1)) {
+        a >>= 1;
+        b >>= 1;
+        k++;
     }
-    while (b != 0) {
-        int nb = a % b;
-        a = b;
-        b = nb;
+
+    // "a" = designated odd number
+    while (!(a & 1)) {
+        a >>= 1;
     }
-    return a;
+
+    while (b) {
+        while (!(b & 1)) b >>= 1;
+        if (a > b) {
+            int t = a;
+            a = b;
+            b = t;
+        }
+        b -= a;
+    }
+
+    return a << k;
 }
 
 pair<int, int> reduce_sqrt(int s) {
@@ -28,4 +44,9 @@ pair<int, int> reduce_sqrt(int s) {
         }
     }
     return {whole, s};
+}
+
+pair<int, int> reduce_sqrts(int s1, int s2) {
+    int g = gcd(s1, s2);
+    return {g, s1 * s2 / (g*g)};
 }

@@ -15,6 +15,7 @@ const int VAR_NAME_COUNT = sizeof(VAR_NAMES)/sizeof(VAR_NAMES[0]);
 
 int gcd(int a, int b);
 pair<int, int> reduce_sqrt(int s);
+pair<int, int> reduce_sqrts(int s1, int s2);
 
 extern int operating_line;
 

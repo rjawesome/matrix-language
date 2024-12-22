@@ -2,7 +2,7 @@
 #include "fraction.h"
 
 Fraction mul_frac(Fraction a, Fraction b) {
-    auto [whole, sq] = reduce_sqrt(a.sqrt * b.sqrt);
+    auto [whole, sq] = reduce_sqrts(a.sqrt, b.sqrt);
     int new_num = a.numerator * b.numerator * whole;
     int new_dem = a.denominator * b.denominator;
     int div = gcd(new_num, new_dem);
