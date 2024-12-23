@@ -9,6 +9,8 @@ using namespace std;
 #include "math.h"
 #include <variant>
 #include <immintrin.h>
+#include <chrono>
+#include <vector>
 
 const string DASH = "-------------";
 const char VAR_NAMES[] = {'x','y','z','w','a','b','c'};
