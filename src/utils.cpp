@@ -174,9 +174,11 @@ void performance_test() {
     cpu_time_used_1 = ((double) (end - start)) / CLOCKS_PER_SEC;
     
     // Extract results and print
-    for (int i = 0; i < 16; i++) {
-        for (int j = 0; j < 16; j++) {
-            printf("gcd_simd(%d, %d) = %d\n", data_a[i], data_b[j], result1[i][j]);
+    for (int k = 0; k < 1000; k++) {
+        for (int i = 0; i < 16; i++) {
+            for (int j = 0; j < 16; j++) {
+                printf("gcd_simd(%d, %d) = %d\n", data_a[i], data_b[j], result1[k][i][j]);
+            }
         }
     }
 
