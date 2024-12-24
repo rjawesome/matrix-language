@@ -212,7 +212,9 @@ void performance_test() {
     printf("is simd less than scalar: %d\n", cpu_time_used_1 < cpu_time_used_2);
 }
 
+#ifndef MAIN
 int main() {
     performance_test();
     return 0;
 }
+#endif
