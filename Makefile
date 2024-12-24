@@ -3,11 +3,11 @@ all: main
 
 # Rule to build the target executable
 main:
-	g++ -std=c++17 -g -Iinc src/*.cpp -o main.out
+	g++ -std=c++17 -g -O3 -mavx2 -Iinc src/*.cpp -o main.out
 
 # Rule to build the Windows executable
 main-win:
-	x86_64-w64-mingw32-g++ -std=c++17 -g -Iinc src/*.cpp -o main.exe
+	x86_64-w64-mingw32-g++ -std=c++17 -g -O3 -mavx2 -Iinc src/*.cpp -o main.exe
 
 # Rule to clean up build files
 clean:
