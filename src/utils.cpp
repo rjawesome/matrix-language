@@ -48,7 +48,7 @@ void print_m256(__m256i vec) {
 __m256i gcd_simd(__m256i a, __m256i b) {
     a = _mm256_abs_epi32(a);
     b = _mm256_abs_epi32(b);
-    __m256i zeroMask = _mm256_cmpgt_epi32(_mm256_min_epi32(a, b), _mm256_setzero_si256());
+    __m256i zeroMask = _mm256_and_si256(_mm256_cmpgt_epi32(b, _mm256_setzero_si256()), _mm256_cmpgt_epi32(a, _mm256_setzero_si256()));
 
     // make both numbers even
     __m256i k = _mm256_setzero_si256();
@@ -69,7 +69,7 @@ __m256i gcd_simd(__m256i a, __m256i b) {
 
     while (true) {
         if (_mm256_testz_si256(a, a)) break;
-        __m256i zeroMask = _mm256_cmpgt_epi32(_mm256_min_epi32(a, b), _mm256_setzero_si256());
+        __m256i zeroMask = _mm256_and_si256(_mm256_cmpgt_epi32(b, _mm256_setzero_si256()), _mm256_cmpgt_epi32(a, _mm256_setzero_si256()));
         while (true) {
             __m256i mask = _mm256_and_si256(zeroMask, _mm256_xor_si256(_mm256_and_si256(b, _mm256_set1_epi32(1)), _mm256_set1_epi32(1)));
             if (_mm256_testz_si256(mask, mask)) break; // no more things to do
