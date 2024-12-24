@@ -48,11 +48,12 @@ void print_m256(__m256i vec) {
 __m256i gcd_simd(__m256i a, __m256i b) {
     a = _mm256_abs_epi32(a);
     b = _mm256_abs_epi32(b);
+    __m256i zeroMask = _mm256_cmpgt_epi32(_mm256_min_epi32(a, b), _mm256_setzero_si256());
 
     // make both numbers even
     __m256i k = _mm256_setzero_si256();
     while (true) {
-        __m256i mask = _mm256_xor_si256(_mm256_and_si256(_mm256_or_si256(a, b), _mm256_set1_epi32(1)), _mm256_set1_epi32(1));
+        __m256i mask = _mm256_and_si256(_mm256_xor_si256(_mm256_and_si256(_mm256_or_si256(a, b), _mm256_set1_epi32(1)), _mm256_set1_epi32(1)), zeroMask);
         if (_mm256_testz_si256(mask, mask)) break; // no more things to do
         a = _mm256_srlv_epi32(a, mask);
         b = _mm256_srlv_epi32(b, mask);
@@ -61,16 +62,16 @@ __m256i gcd_simd(__m256i a, __m256i b) {
 
     // "a" = designated odd number
     while (true) {
-        __m256i mask = _mm256_xor_si256(_mm256_and_si256(a, _mm256_set1_epi32(1)), _mm256_set1_epi32(1));
+        __m256i mask = _mm256_and_si256(_mm256_xor_si256(_mm256_and_si256(a, _mm256_set1_epi32(1)), _mm256_set1_epi32(1)), zeroMask);
         if (_mm256_testz_si256(mask, mask)) break; // no more things to do
         a = _mm256_srlv_epi32(a, mask);
     }
 
     while (true) {
         if (_mm256_testz_si256(a, a)) break;
-        __m256i zeroMask = _mm256_and_si256(_mm256_cmpeq_epi32(b, _mm256_setzero_si256()), _mm256_set1_epi32(1));
+        __m256i zeroMask = _mm256_cmpgt_epi32(_mm256_min_epi32(a, b), _mm256_setzero_si256());
         while (true) {
-            __m256i mask = _mm256_xor_si256(_mm256_or_si256(_mm256_and_si256(b, _mm256_set1_epi32(1)), zeroMask), _mm256_set1_epi32(1));
+            __m256i mask = _mm256_and_si256(zeroMask, _mm256_xor_si256(_mm256_and_si256(b, _mm256_set1_epi32(1)), _mm256_set1_epi32(1)));
             if (_mm256_testz_si256(mask, mask)) break; // no more things to do
             b = _mm256_srlv_epi32(b, mask);
         }
@@ -139,8 +140,8 @@ pair<int, int> reduce_sqrts(int s1, int s2) {
 
 void performance_test() {
     // Two arrays: One for each input vector of 16 integers
-    vector<int> data_a = {12, 7, 18, 36, 54, 42, 20, 80, 15, 35, 24, 60, 27, 14, 10, 90};
-    vector<int> data_b = {15, 35, 24, 60, 27, 14, 10, 90, 12, 7, 18, 36, 54, 42, 20, 80};
+    vector<int> data_a = {12, 7, 18, 36, 54, 42, 20, 80, 15, 35, 24, 60, 27, 14, 0, 90};
+    vector<int> data_b = {15, 35, 24, 60, 27, 14, 10, 90, 12, 0, 18, 36, 54, 42, 20, 80};
 
     // Timing for scalar GCD function
     clock_t start, end;
@@ -196,7 +197,7 @@ void performance_test() {
     for (int k = 0; k < 1000; k++) {
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 16; j++) {
-                printf("gcd_simd(%d, %d) = %d\n", data_a[i], data_b[j], result2[k][i][j]);
+                printf("gcd_simd(%d, %d) = %d\n", data_a[i] + k, data_b[j], result2[k][i][j]);
                 if (!(result1[k][i][j] == result2[k][i][j])) {
                     exit(1);
                 }
