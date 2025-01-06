@@ -5,16 +5,29 @@ int operating_line = 0;
 int gcd(int a, int b) {
     a = abs(a);
     b = abs(b);
+    if (a < b) {
+        int temp = a;
+        a = b;
+        b = temp;
+    }
+    while (b != 0) {
+        int nb = a % b;
+        a = b;
+        b = nb;
+    }
+    return a;
+}
+
+int gcd_binary(int a, int b) {
+    a = abs(a);
+    b = abs(b);
     if (!a) return b;
     if (!b) return a;
 
     // both numbers even
-    int k = 0;
-    while (!(a & 1) && !(b & 1)) {
-        a >>= 1;
-        b >>= 1;
-        k++;
-    }
+    int k = min(__builtin_ctz(a), __builtin_ctz(b));
+    a >>= k;
+    b >>= k;
 
     // "a" = designated odd number
     while (!(a & 1)) {
@@ -158,7 +171,7 @@ void performance_test() {
                 int t[8];
                 int t2[8];
                 int r[8];
-                for (int k = 0; k < 8; k++) t[k] = data_a[i] + x;
+                for (int k = 0; k < 8; k++) t[k] = data_a[i];
                 for (int k = 0; k < 8; k++) t2[k] = data_b[k+j*8];
                 __m256i a = _mm256_loadu_si256((__m256i*)(t));
                 __m256i b = _mm256_loadu_si256((__m256i*)(t2));
@@ -187,7 +200,7 @@ void performance_test() {
     for (int k = 0; k < 1000; k++) {
         for (int i = 0; i < 16; i++) {
             for (int j = 0; j < 16; j++) {
-                result2[k][i][j] = gcd(data_a[i] + k, data_b[j]);
+                result2[k][i][j] = gcd(data_a[i], data_b[j]);
             }
         }
     }
