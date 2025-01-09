@@ -91,7 +91,7 @@ variant<Error, DataContainer> mult(DataContainer args[]) {
     if (args[0].type == TYPE_MATRIX && args[1].type == TYPE_MATRIX) {
         vector<vector<Fraction>> matrix1 = *(vector<vector<Fraction>>*)(args[0].ptr);
         vector<vector<Fraction>> matrix2 = *(vector<vector<Fraction>>*)(args[1].ptr);
-        variant<Error, vector<vector<Fraction>>> matrix = mat_mul(matrix1, matrix2);
+        variant<Error, vector<vector<Fraction>>> matrix = mat_mul_simd(matrix1, matrix2);
         return holds_alternative<Error>(matrix) ? 
             variant<Error, DataContainer>(get<Error>(matrix)) :
             DataContainer{TYPE_MATRIX, true, .ptr = new vector<vector<Fraction>>(move(get<vector<vector<Fraction>>>(matrix)))};

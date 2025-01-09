@@ -3,7 +3,7 @@ all: main
 
 # Rule to build the target executable
 main:
-	g++ -DMAIN -std=c++17 -g -O3 -mavx2 -Iinc src/*.cpp -o main.out
+	g++ -DMAIN -std=c++17 -g -O3 -mavx2 -Iinc -Wno-ignored-attributes src/*.cpp -o main.out
 
 # Rule to build the Windows executable
 main-win:

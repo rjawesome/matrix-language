@@ -9,12 +9,34 @@ Fraction mul_frac(Fraction a, Fraction b) {
     return { new_num / div, new_dem / div, sq };
 }
 
+pair<pair<__m256i, __m256i>, __m256i> mul_fracs(__m256i num1, __m256i den1, __m256i sqrt1, __m256i num2, __m256i den2, __m256i sqrt2) {
+    auto [whole, sq] = reduce_sqrts(sqrt1, sqrt2);
+    cout << "fr"<< endl;
+    print_m256(num1);
+    print_m256(num2);
+    print_m256(whole);
+    __m256i new_num = _mm256_mullo_epi32(_mm256_mullo_epi32(num1, num2), whole);
+    print_m256(new_num);
+    __m256i new_dem = _mm256_mullo_epi32(den1, den2);
+    __m256i div = gcd(new_num, new_dem);
+    return { {divide_m256i_exact(new_num, div), divide_m256i_exact(new_dem, div)}, sq };
+}
+
 variant<Error, Fraction> add_frac(Fraction a, Fraction b) {
     expect(a.sqrt == b.sqrt || a.numerator == 0 || b.numerator == 0, "Addition between fractions with different square roots is not supported");
     int common_denom = a.denominator * b.denominator / gcd(a.denominator, b.denominator);
     int new_num = a.numerator * (common_denom/a.denominator) + b.numerator * (common_denom/b.denominator);
     int div = gcd(new_num, common_denom);
     return Fraction{new_num / div, common_denom / div, a.numerator == 0 ? b.sqrt : a.sqrt };
+}
+
+variant<Error, pair<pair<__m256i, __m256i>, __m256i>> add_fracs(__m256i num1, __m256i den1, __m256i sqrt1, __m256i num2, __m256i den2, __m256i sqrt2) {
+    __m256i test = _mm256_andnot_si256(_mm256_cmpeq_epi32(sqrt1, sqrt2), _mm256_and_si256(_mm256_cmpgt_epi32(num1, _mm256_setzero_si256()), _mm256_cmpgt_epi32(num2, _mm256_setzero_si256())));
+    expect(_mm256_testz_si256(test, test), "Addition between fractions with different square roots is not supported");
+    __m256i common_denom = divide_m256i_exact(_mm256_mullo_epi32(den1, den2), gcd(den1, den2));
+    __m256i new_num = _mm256_add_epi32(_mm256_mullo_epi32(num1, divide_m256i_exact(common_denom, den1)), _mm256_mullo_epi32(num2, divide_m256i_exact(common_denom, den2)));
+    __m256i div = gcd(new_num, common_denom);
+    return pair<pair<__m256i, __m256i>, __m256i>{ { divide_m256i_exact(new_num, div), divide_m256i_exact(common_denom, div) }, _mm256_max_epi32(sqrt1, sqrt2) };
 }
 
 Fraction negate_frac(Fraction a) {

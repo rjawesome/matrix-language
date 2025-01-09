@@ -11,7 +11,7 @@ int gcd(int a, int b) {
         b = temp;
     }
     while (b != 0) {
-        int nb = a % b;
+        int nb = a % b; // nb = a - (a / b) * b)
         a = b;
         b = nb;
     }
@@ -50,7 +50,7 @@ int gcd_binary(int a, int b) {
 
 void print_m256(__m256i vec) {
     int bleh[8];
-    _mm256_storeu_si256((__m256i*)(bleh), vec);
+    _mm256_store_si256((__m256i*)(bleh), vec);
     for (int i = 0; i < 8; ++i) {
         // Extract each 32-bit integer from the _m256 register
         int value = bleh[i];
@@ -58,7 +58,7 @@ void print_m256(__m256i vec) {
     }
 }
 
-__m256i gcd_simd(__m256i a, __m256i b) {
+__m256i gcd(__m256i a, __m256i b) {
     a = _mm256_abs_epi32(a);
     b = _mm256_abs_epi32(b);
     __m256i zeroMask = _mm256_and_si256(_mm256_cmpgt_epi32(b, _mm256_setzero_si256()), _mm256_cmpgt_epi32(a, _mm256_setzero_si256()));
@@ -96,6 +96,32 @@ __m256i gcd_simd(__m256i a, __m256i b) {
 
     return _mm256_sllv_epi32(b, k);
 }
+
+// __m256i gcd_simd_2(__m256i a, __m256i b) {
+//     a = _mm256_abs_epi32(a);
+//     b = _mm256_abs_epi32(b);
+    
+
+//     // "a" = big
+//     __m256i t = a;
+//     a = _mm256_max_epi32(a, b);
+//     b = _mm256_min_epi32(t, b);
+
+//     while (true) {
+//         if (_mm256_testz_si256(b, b)) break;
+//         __m256i zeroMask = _mm256_cmpgt_epi32(b, _mm256_setzero_si256());
+
+//         _mm256_div_
+        
+//         // blend with mask
+//         __m256i t = a;
+//         a = _mm256_min_epi32(a, b);
+//         b = _mm256_max_epi32(t, b);
+//         b = _mm256_sub_epi32(b, a);
+//     }
+
+//     return _mm256_sllv_epi32(b, k);
+// }
 
 // __m512i gcd_simd_512(__m512i a, __m512i b) {
 //     _mm512_abs_epi32(a);
@@ -151,9 +177,34 @@ pair<int, int> reduce_sqrts(int s1, int s2) {
     return {g, s1 * s2 / (g*g)};
 }
 
+pair<__m256i, __m256i> reduce_sqrts(__m256i s1, __m256i s2) {
+    __m256i g = gcd(s1, s2);
+    return {g, divide_m256i_exact(_mm256_mullo_epi32(s1, s2), _mm256_mullo_epi32(g, g))};
+}
+
+__m256i divide_m256i_exact(__m256i dividend_vec, __m256i divisor_vec) {
+    // Convert divisor to float
+    __m256 float_divisor = _mm256_cvtepi32_ps(divisor_vec);
+    __m256 reciprocal = _mm256_rcp_ps(float_divisor);
+
+    // Convert dividend to float
+    __m256 float_dividend = _mm256_cvtepi32_ps(dividend_vec);
+
+    // Perform division
+    __m256 quotient_float = _mm256_mul_ps(float_dividend, reciprocal);
+
+    // Add bias for exact rounding
+    __m256 biased_quotient = _mm256_add_ps(quotient_float, _mm256_set1_ps(0.5f));
+    
+    // Convert to integers
+    __m256i quotient_int = _mm256_cvttps_epi32(biased_quotient);
+
+    return quotient_int;
+}
+
 void performance_test() {
     // Two arrays: One for each input vector of 16 integers
-    vector<int> data_a = {12, 7, 18, 36, 54, 42, 20, 80, 15, 35, 24, 60, 27, 14, 0, 90};
+    vector<int> data_a = {12, 7, 18, 36, 54, 42, -20, 80, 15, 35, 24, 60, 27, 14, 0, 90};
     vector<int> data_b = {15, 35, 24, 60, 27, 14, 10, 90, 12, 0, 18, 36, 54, 42, 20, 80};
 
     // Timing for scalar GCD function
@@ -173,10 +224,10 @@ void performance_test() {
                 int r[8];
                 for (int k = 0; k < 8; k++) t[k] = data_a[i];
                 for (int k = 0; k < 8; k++) t2[k] = data_b[k+j*8];
-                __m256i a = _mm256_loadu_si256((__m256i*)(t));
-                __m256i b = _mm256_loadu_si256((__m256i*)(t2));
-                __m256i result_vec = gcd_simd(a, b);
-                _mm256_storeu_si256((__m256i*)(r), result_vec);
+                __m256i a = _mm256_load_si256((__m256i*)(t));
+                __m256i b = _mm256_load_si256((__m256i*)(t2));
+                __m256i result_vec = gcd(a, b);
+                _mm256_store_si256((__m256i*)(r), result_vec);
                 for (int k = 0; k < 8; k++) result1[x][i][k+j*8] = r[k];
             }
         }

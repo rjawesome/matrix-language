@@ -313,6 +313,66 @@ variant<Error, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const 
     return output;
 }
 
+variant<Error, vector<vector<Fraction>>> mat_mul_simd(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
+    expect(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size(), "Matrix multiplication dimensions invalid");
+    if (matrix2[0].size() < matrix1.size()) {
+        return mat_mul_simd(matrix2, matrix1);
+    }
+    vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
+    for (int i = 0; i < matrix1.size(); i++) {
+        for (int j = 0; j < matrix2[0].size(); j+=8) {
+            if (j + 8 > matrix2[0].size()) {
+                while (j < matrix2[0].size()) {
+                    Fraction sum = {0, 1, 1};
+                    for (int k = 0; k < matrix2.size(); k++) {
+                        unwrap(Fraction, sum, add_frac(sum, mul_frac(matrix1[i][k], matrix2[k][j])));
+                    }
+                    output[i][j] = sum;
+                    j++;
+                }
+            }
+            else {
+                FracGroup sums = {{_mm256_set1_epi32(0), _mm256_set1_epi32(1)}, _mm256_set1_epi32(1)};
+                for (int k = 0; k < matrix2.size(); k++) {
+                    int num1[8];
+                    int den1[8];
+                    int sqrt1[8];
+                    int num2[8];
+                    int den2[8];
+                    int sqrt2[8];
+                    for (int l = 0; l < 8; l++) {
+                        num1[l] = matrix1[i][k].numerator;
+                        den1[l] = matrix1[i][k].denominator;
+                        sqrt1[l] = matrix1[i][k].sqrt;
+                        num2[l] = matrix2[k][j+l].numerator;
+                        den2[l] = matrix2[k][j+l].denominator;
+                        sqrt2[l] = matrix2[k][j+l].sqrt;
+                    }
+                    cout<<"a"<< endl;
+                    FracGroup muls = mul_fracs(_mm256_load_si256((__m256i*)num1), _mm256_load_si256((__m256i*)den1), _mm256_load_si256((__m256i*)sqrt1), _mm256_load_si256((__m256i*)num2), _mm256_load_si256((__m256i*)den2), _mm256_load_si256((__m256i*)sqrt2));
+                    cout<<"b"<< endl;
+                    print_m256(muls.first.first);
+                    print_m256(muls.first.second);
+                    print_m256(muls.second);
+                    unwrap(FracGroup, sums, add_fracs(sums.first.first, sums.first.second, sums.second, muls.first.first, muls.first.second, muls.second));
+                }
+                int nums[8];
+                int dens[8];
+                int sqrts[8];
+                _mm256_store_si256((__m256i*)nums, sums.first.first);
+                _mm256_store_si256((__m256i*)dens, sums.first.second);
+                _mm256_store_si256((__m256i*)sqrts, sums.second);
+                for (int l = 0; l < 8; l++) {
+                    output[i][j+l].numerator = nums[l];
+                    output[i][j+l].denominator = dens[l];
+                    output[i][j+l].sqrt = sqrts[l];
+                }
+            }
+        }
+    }
+    return output;
+}
+
 variant<Error, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
     expect(matrix1.size() == matrix2.size() && (matrix1.size() == 0 || matrix1[0].size() == matrix2[0].size()), "Cannot add matrices");
     int rows = matrix1.size();

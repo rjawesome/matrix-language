@@ -14,6 +14,7 @@ variant<Error, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> con
 vector<vector<Fraction>> matrix_scale(Fraction f, vector<vector<Fraction>> const &matrix1);
 variant<Error, vector<vector<Fraction>>> orthonormalize_rows(vector<vector<Fraction>> const &matrix);
 variant<Error, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2);
+variant<Error, vector<vector<Fraction>>> mat_mul_simd(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2);
 variant<Error, vector<vector<Fraction>>> rref(const vector<vector<Fraction>> &matrix);
 variant<Error, vector<vector<Fraction>>> inverse(const vector<vector<Fraction>> &matrix);
 variant<Error, Fraction> determinant(const vector<vector<Fraction>> &matrix);

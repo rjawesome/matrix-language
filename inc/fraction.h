@@ -3,8 +3,10 @@
 
 #include <iostream>
 #include "utils.h"
+#include <immintrin.h>
 #include <variant>
 using namespace std;
+typedef pair<pair<__m256i, __m256i>, __m256i> FracGroup;
 
 struct Fraction {
     int numerator;
@@ -25,7 +27,9 @@ struct Error; // defined in utils.h
 void print_frac(Fraction const &m);
 Error load_frac(string s, Fraction &m);
 Fraction mul_frac(Fraction a, Fraction b);
+variant<Error, pair<pair<__m256i, __m256i>, __m256i>> add_fracs(__m256i num1, __m256i den1, __m256i sqrt1, __m256i num2, __m256i den2, __m256i sqrt2);
 variant<Error, Fraction> add_frac(Fraction a, Fraction b);
+pair<pair<__m256i, __m256i>, __m256i> mul_fracs(__m256i num1, __m256i den1, __m256i sqrt1, __m256i num2, __m256i den2, __m256i sqrt2);
 Fraction negate_frac(Fraction a);
 Fraction inverse_frac(Fraction a);
 Fraction sqrt_frac(Fraction a);
