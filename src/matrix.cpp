@@ -315,9 +315,6 @@ variant<Error, vector<vector<Fraction>>> mat_mul(vector<vector<Fraction>> const 
 
 variant<Error, vector<vector<Fraction>>> mat_mul_simd(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2) {
     expect(matrix1.size() > 0 && matrix2.size() > 0 && matrix1[0].size() == matrix2.size(), "Matrix multiplication dimensions invalid");
-    if (matrix2[0].size() < matrix1.size()) {
-        return mat_mul_simd(matrix2, matrix1);
-    }
     vector<vector<Fraction>> output(matrix1.size(), vector<Fraction>(matrix2[0].size()));
     for (int i = 0; i < matrix1.size(); i++) {
         for (int j = 0; j < matrix2[0].size(); j+=8) {
@@ -333,13 +330,13 @@ variant<Error, vector<vector<Fraction>>> mat_mul_simd(vector<vector<Fraction>> c
             }
             else {
                 FracGroup sums = {{_mm256_set1_epi32(0), _mm256_set1_epi32(1)}, _mm256_set1_epi32(1)};
+                int num1[8];
+                int den1[8];
+                int sqrt1[8];
+                int num2[8];
+                int den2[8];
+                int sqrt2[8];
                 for (int k = 0; k < matrix2.size(); k++) {
-                    int num1[8];
-                    int den1[8];
-                    int sqrt1[8];
-                    int num2[8];
-                    int den2[8];
-                    int sqrt2[8];
                     for (int l = 0; l < 8; l++) {
                         num1[l] = matrix1[i][k].numerator;
                         den1[l] = matrix1[i][k].denominator;
@@ -348,12 +345,7 @@ variant<Error, vector<vector<Fraction>>> mat_mul_simd(vector<vector<Fraction>> c
                         den2[l] = matrix2[k][j+l].denominator;
                         sqrt2[l] = matrix2[k][j+l].sqrt;
                     }
-                    cout<<"a"<< endl;
                     FracGroup muls = mul_fracs(_mm256_load_si256((__m256i*)num1), _mm256_load_si256((__m256i*)den1), _mm256_load_si256((__m256i*)sqrt1), _mm256_load_si256((__m256i*)num2), _mm256_load_si256((__m256i*)den2), _mm256_load_si256((__m256i*)sqrt2));
-                    cout<<"b"<< endl;
-                    print_m256(muls.first.first);
-                    print_m256(muls.first.second);
-                    print_m256(muls.second);
                     unwrap(FracGroup, sums, add_fracs(sums.first.first, sums.first.second, sums.second, muls.first.first, muls.first.second, muls.second));
                 }
                 int nums[8];
@@ -402,6 +394,17 @@ variant<Error, vector<vector<Fraction>>> get_matrix(int rows, int cols) {
         for (int j = 0; j < cols; j++) {
             string s; cin >> s;
             load_frac(s, matrix[i][j]);
+        }
+    }
+    return matrix;
+}
+
+variant<Error, vector<vector<Fraction>>> rand_matrix(int rows, int cols) {
+    expect(rows > 0 && cols > 0, "Matrix needs positive rows and columns");
+    vector<vector<Fraction>> matrix(rows, vector<Fraction>(cols));
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            load_frac(to_string(i-j)+"/"+to_string(max(i+j, 1)), matrix[i][j]);
         }
     }
     return matrix;

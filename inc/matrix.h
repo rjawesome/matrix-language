@@ -8,6 +8,7 @@
 using namespace std;
 
 variant<Error, vector<vector<Fraction>>> get_matrix(int rows, int cols);
+variant<Error, vector<vector<Fraction>>> rand_matrix(int rows, int cols);
 void print_matrix(vector<vector<Fraction>> const &matrix);
 vector<vector<Fraction>> transpose(vector<vector<Fraction>> const &matrix);
 variant<Error, vector<vector<Fraction>>> add_matrix(vector<vector<Fraction>> const &matrix1, vector<vector<Fraction>> const &matrix2);

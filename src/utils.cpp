@@ -185,16 +185,16 @@ pair<__m256i, __m256i> reduce_sqrts(__m256i s1, __m256i s2) {
 __m256i divide_m256i_exact(__m256i dividend_vec, __m256i divisor_vec) {
     // Convert divisor to float
     __m256 float_divisor = _mm256_cvtepi32_ps(divisor_vec);
-    __m256 reciprocal = _mm256_rcp_ps(float_divisor);
 
     // Convert dividend to float
     __m256 float_dividend = _mm256_cvtepi32_ps(dividend_vec);
 
     // Perform division
-    __m256 quotient_float = _mm256_mul_ps(float_dividend, reciprocal);
+    __m256 quotient_float = _mm256_div_ps(float_dividend, float_divisor);
 
     // Add bias for exact rounding
-    __m256 biased_quotient = _mm256_add_ps(quotient_float, _mm256_set1_ps(0.5f));
+    __m256 signs = _mm256_and_ps(quotient_float, _mm256_set1_ps(-0.0f));
+    __m256 biased_quotient = _mm256_add_ps(quotient_float, _mm256_or_ps(_mm256_set1_ps(0.2f), signs));
     
     // Convert to integers
     __m256i quotient_int = _mm256_cvttps_epi32(biased_quotient);
