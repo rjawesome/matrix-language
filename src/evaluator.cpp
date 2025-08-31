@@ -1,7 +1,7 @@
 #include "evaluator.h"
 
 set<char> banned_var_starts{'1','2','3','4','5','6','7','8','9','0','/','-'};
-set<char> frac_start{'-','1','2','3','4','5','6','7','8','9',SQRT_CH[0]};
+set<char> frac_start{'-','0','1','2','3','4','5','6','7','8','9',SQRT_CH[0]};
 
 inline bool is_ptr(DataType t) {
     return t == TYPE_MATRIX || t == TYPE_VECTOR;
